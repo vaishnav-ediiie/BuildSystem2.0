@@ -5,9 +5,14 @@ namespace CustomGridSystem
 {
     internal struct GridTypeInfinite : IGridType
     {
-        public bool IsCellNumberValid(int row, int col)
+        public bool IsCellNumberValid(CellNumber number)
         {
-            return (row >= 0) && (col >= 0);
+            return (number.row >= 0) && (number.column >= 0);
+        }
+
+        public bool IsEdgeNumberValid(EdgeNumber number)
+        {
+            return IsCellNumberValid(number.CellAfter);
         }
 
         public CellNumber ValidateCellNumber(CellNumber number)

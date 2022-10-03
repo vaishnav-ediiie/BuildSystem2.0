@@ -1,9 +1,6 @@
-﻿using KSRecs.Deprecated.GridSystemSpace;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 
 namespace CustomGridSystem
@@ -54,7 +51,7 @@ namespace CustomGridSystem
             this.gridType = new GridTypeFinite(lastCellNumber);
         }
 
-        private CellNumber CellPositionToNumberRaw(Vector3 position)
+        public CellNumber CellPositionToNumberRaw(Vector3 position)
         {
             Vector2 wp = new Vector2(position.x, position.z);
             float col = (wp.x - AnchorPosition.x) / CellSize.x;
@@ -62,7 +59,7 @@ namespace CustomGridSystem
             return new CellNumber(Mathf.RoundToInt(row), Mathf.RoundToInt(col));
         }
 
-        public CellNumber AdjacentCellTo(CellNumber referenceCell, Direction direction)
+        public CellNumber AdjacentCellToRaw(CellNumber referenceCell, Direction direction)
         {
             switch (direction)
             {
@@ -74,18 +71,66 @@ namespace CustomGridSystem
             }
         }
 
+        public CellNumber AdjacentCellTo(CellNumber referenceCell, Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.Down: return gridType.ValidateCellNumber(new CellNumber(referenceCell.row - 1, referenceCell.column));
+                case Direction.Up: return gridType.ValidateCellNumber(new CellNumber(referenceCell.row + 1, referenceCell.column));
+                case Direction.Left: return gridType.ValidateCellNumber(new CellNumber(referenceCell.row, referenceCell.column - 1));
+                case Direction.Right: return gridType.ValidateCellNumber(new CellNumber(referenceCell.row, referenceCell.column + 1));
+                default: return referenceCell;
+            }
+        }
+
         public EdgeNumber EdgePositionToNumber(Vector3 position, EdgeType edgeType)
         {
-            var rawNumber = CellPositionToNumberRaw(position);
-            var clampedNumber = gridType.ValidateCellNumber(rawNumber);
-            if (edgeType == EdgeType.Horizontal)
+            CellNumber rawNumber = CellPositionToNumberRaw(position);
+            CellNumber lastCell = gridType.LastCellNumber;
+            int row, col;
+            switch (edgeType)
             {
-                if (clampedNumber.column == rawNumber.column || rawNumber.column < 0) return new EdgeNumber(CellPositionToNumber(position), edgeType);
-                return new EdgeNumber(clampedNumber.row, clampedNumber.column + 1, edgeType);
+                case EdgeType.Vertical:
+                    row = Mathf.Clamp(rawNumber.row, 0, lastCell.row);
+                    col = Mathf.Clamp(rawNumber.column, 0, lastCell.column + 1);
+                    break;
+                case EdgeType.Horizontal:
+                    row = Mathf.Clamp(rawNumber.row, 0, lastCell.row + 1);
+                    col = Mathf.Clamp(rawNumber.column, 0, lastCell.column);
+                    break;
+                default:
+                    throw new NotImplementedException($"Cannot understand direction: {edgeType}");
             }
 
-            if (clampedNumber.row == rawNumber.row || rawNumber.row < 0) return new EdgeNumber(CellPositionToNumber(position), edgeType);
-            return new EdgeNumber(clampedNumber.row + 1, clampedNumber.column, edgeType);
+            return new EdgeNumber(row, col, edgeType);
+        }
+
+        public EdgeNumber EdgePositionToNumber(Vector3 position, Direction direction)
+        {
+            CellNumber rawNumber = CellPositionToNumberRaw(position);
+            CellNumber lastCell = gridType.LastCellNumber - new CellNumber(1, 1);
+            int row, col;
+            switch (direction)
+            {
+                case Direction.Up:
+                    row = Mathf.Clamp(rawNumber.row, 0, lastCell.row) + 1;
+                    col = Mathf.Clamp(rawNumber.column, 0, lastCell.column);
+                    return new EdgeNumber(row, col, EdgeType.Vertical);
+                case Direction.Down:
+                    row = Mathf.Clamp(rawNumber.row, 0, lastCell.row);
+                    col = Mathf.Clamp(rawNumber.column, 0, lastCell.column);
+                    return new EdgeNumber(row, col, EdgeType.Vertical);
+                case Direction.Right:
+                    row = Mathf.Clamp(rawNumber.row, 0, lastCell.row);
+                    col = Mathf.Clamp(rawNumber.column, 0, lastCell.column) + 1;
+                    return new EdgeNumber(row, col, EdgeType.Horizontal);
+                case Direction.Left:
+                    row = Mathf.Clamp(rawNumber.row, 0, lastCell.row);
+                    col = Mathf.Clamp(rawNumber.column, 0, lastCell.column);
+                    return new EdgeNumber(row, col, EdgeType.Horizontal);
+                default:
+                    throw new NotImplementedException($"Cannot understand direction: {direction}");
+            }
         }
 
         public void SetCellSize(Vector2 newSize)
@@ -120,7 +165,7 @@ namespace CustomGridSystem
             Vector2 deltaSize = newCellSize - CellSize;
             Vector2 deltaPos = newAnchor - AnchorPosition;
             float deltaY = newYPosition - this.GridYPos;
-            
+
 
             if (this.gridType is GridTypeFinite)
             {
@@ -154,15 +199,15 @@ namespace CustomGridSystem
             this.OnGridMoved?.Invoke(delta);
         }
 
-        public bool IsCellNumberValid(CellNumber cellNumber) => gridType.IsCellNumberValid(cellNumber.row, cellNumber.column);
+        public bool IsCellNumberValid(CellNumber cellNumber) => gridType.IsCellNumberValid(cellNumber);
+        public bool IsEdgeNumberValid(EdgeNumber edgeNumber) => gridType.IsEdgeNumberValid(edgeNumber);
         public CellNumber ValidateCellNumber(CellNumber cellNumber) => gridType.ValidateCellNumber(cellNumber);
         public CellNumber LastCellNumber => gridType.LastCellNumber;
 
         // @formatter:off
-        private Vector3 CellNumberToPositionRaw(CellNumber cellNumber) => new Vector3(cellNumber.column * CellSize.x + AnchorPosition.x, GridYPos, cellNumber.row * CellSize.y + AnchorPosition.y);
         public CellNumber CellPositionToNumber(Vector3 position) => gridType.ValidateCellNumber(CellPositionToNumberRaw(position));
-        public Vector3 CellNumberToPosition(CellNumber cellNumber) => CellNumberToPositionRaw(gridType.ValidateCellNumber(cellNumber));
-        public Vector3 EdgeNumberToPosition(EdgeNumber edgeNumber) => (CellNumberToPositionRaw(edgeNumber.CellBefore) + CellNumberToPositionRaw(edgeNumber.CellAfter)) / 2f;
+        public Vector3 CellNumberToPosition(CellNumber cellNumber) => new Vector3(cellNumber.column * CellSize.x + AnchorPosition.x, GridYPos, cellNumber.row * CellSize.y + AnchorPosition.y);
+        public Vector3 EdgeNumberToPosition(EdgeNumber edgeNumber) => (CellNumberToPosition(edgeNumber.CellBefore) + CellNumberToPosition(edgeNumber.CellAfter)) / 2f;
         // @formatter:on
 
         /// <summary>
@@ -185,7 +230,7 @@ namespace CustomGridSystem
                     lastCellNumber = lastCell
                 });
         }
-        
+
         /// <summary>
         /// Do not use this method if you are using UniPlaceGrid or DuoPlaceGrid. Use DeserializeWithOccupants instead.
         /// </summary>
@@ -194,13 +239,13 @@ namespace CustomGridSystem
         {
             SimpleGridData gridData = JsonUtility.FromJson<SimpleGridData>(data);
             Vector2 oldCellSize = this.CellSize;
-            Vector2 oldPosition= this.AnchorPosition;
+            Vector2 oldPosition = this.AnchorPosition;
             float oldY = this.GridYPos;
 
             this.CellSize = gridData.cellSize;
             this.AnchorPosition = gridData.anchorPosition;
             this.GridYPos = gridData.gridYPos;
-            
+
             if (gridData.isFinite) this.gridType = new GridTypeFinite(gridData.lastCellNumber);
             else this.gridType = new GridTypeInfinite();
 
@@ -208,19 +253,5 @@ namespace CustomGridSystem
             OnGridMoved?.Invoke(this.AnchorPosition - oldPosition);
             OnGridYPosChanged?.Invoke(this.GridYPos - oldY);
         }
-        
-        public static IEnumerable<CellNumber> LoopCells(CellNumber startCell, CellNumber endCell)
-        {
-            for (int row = startCell.row; row < endCell.row; row++)
-            {
-                for (int col = startCell.column; col < endCell.column; col++)
-                {
-                    yield return new CellNumber(row, col);
-                }
-            }
-
-            yield break;
-        }
-
     }
 }

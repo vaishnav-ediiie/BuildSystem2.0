@@ -17,18 +17,12 @@ namespace CustomGridSystem.Examples
         {
             SimpleGrid = new SimpleGrid(lastCellNumber, cellSize, position, yPosition);
             
-            foreach (CellNumber cellNumber in SimpleGrid.LoopCells(CellNumber.Zero, lastCellNumber))
+            foreach (CellNumber cellNumber in CellNumber.LoopCells(CellNumber.Zero, lastCellNumber))
             {
                 Instantiate(cellObject, SimpleGrid.CellNumberToPosition(cellNumber), Quaternion.identity, transform)
                     .name = $"Cell {cellNumber}";
             }
-
-            SimpleGrid.SerializeGrid();
         }
 
-        void Update()
-        {
-
-        }
     }
 }

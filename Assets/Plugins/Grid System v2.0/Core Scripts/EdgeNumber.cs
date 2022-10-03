@@ -6,7 +6,7 @@ namespace CustomGridSystem
     /// Representation of a Edge's Position in 2D grid.
     /// </summary>
     [Serializable]
-    public struct EdgeNumber : IEquatable<EdgeNumber>, IFormattable, IGridNumber
+    public struct EdgeNumber : IEquatable<EdgeNumber>, IGridNumber
     {
        /// <summary>For horizontal cellType, returns Cell right of this edge; For vertical cellType, returns Cell below this edge. </summary>
         public CellNumber CellAfter { get; }
@@ -20,7 +20,7 @@ namespace CustomGridSystem
                 return new CellNumber(CellAfter.row, CellAfter.column - 1);
             }
         }
-
+        
         public EdgeType edgeType;
 
         public EdgeNumber(int row, int column, EdgeType edgeType)
@@ -40,15 +40,10 @@ namespace CustomGridSystem
             return (other.CellAfter == this.CellAfter) && (other.edgeType == this.edgeType);
         }
 
-        public string ToString(string format, IFormatProvider formatProvider)
-        {
-            return $"[{CellAfter.row}, {CellAfter.column}, {edgeType}]";
-        }
-
+        
         public override bool Equals(object obj) => obj is EdgeNumber other && Equals(other);
-
         public override int GetHashCode() => $"{CellAfter.row}{CellAfter.column}{edgeType}".GetHashCode();
-
+        public override string ToString() => $"[{CellAfter.row}, {CellAfter.column}, {edgeType}]";
 
         public static implicit operator string(EdgeNumber cellNumber) => $"[{cellNumber.CellAfter.row}, {cellNumber.CellAfter.column}, {cellNumber.edgeType}]";
 
