@@ -8,14 +8,14 @@ public class CellDecorator : IMonoPlaceable
 {
     [NonSerialized] public CellPlaceableSO Scriptable;
     [NonSerialized] public CellPlaceable Parent;
-    [NonSerialized] public CellNumber Number;
     [NonSerialized] public int Rotation;
+    
+    public CellNumber Number => Parent.Number;
 
-    public void Init(CellPlaceableSO scriptable, CellPlaceable parent, CellNumber number, int rotation, LayerMask layer)
+    public void Init(CellPlaceableSO scriptable, CellPlaceable parent, int rotation, LayerMask layer)
     {
         this.Scriptable = scriptable;
         this.Parent = parent;
-        this.Number = number;
         this.Rotation = rotation;
         this.gameObject.SetLayerRecursive(layer.GetLayer());
     }

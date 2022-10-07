@@ -4,7 +4,7 @@ namespace CustomBuildSystem
 {
     public abstract class PlaceableSOBase : ScriptableObject
     {
-        [SerializeField] internal int placeableID;
+        [SerializeField] internal int ID;
         [SerializeField] internal GameObject placingOkay;
         [SerializeField] internal GameObject placingError;
         [SerializeField] internal GameObject placed;

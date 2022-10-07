@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using CustomGridSystem;
 using DebugToScreen;
+using Newtonsoft.Json;
 
 
 namespace CustomBuildSystem
@@ -37,7 +38,6 @@ namespace CustomBuildSystem
         public Transform Player => player;
         public Camera PlayerCamera => playerCamera;
         public int CurrentFloor { get; private set; }
-        public Transform Cursor;
 
 
         private void Awake()
@@ -158,6 +158,23 @@ namespace CustomBuildSystem
             {
                 SwitchState<BSS_Idle>();
             }
+        }
+
+        public string Serialize()
+        {
+            return gridCurrent.SerializeWithOccupants(
+                cellOccupantSerializer: cellPlaceable => JsonConvert.SerializeObject(new CellPlaceable.Serializer(cellPlaceable)),
+                edgeOccupantSerializer: edgePlaceable => JsonConvert.SerializeObject(new EdgePlaceable.Serializer(edgePlaceable))
+            );
+        }
+        
+        public void Deserialize(string data, Dictionary<int, PlaceableSOBase> allPlaceableData)
+        {
+            gridCurrent.DeserializeWithOccupants(data, 
+                cellOccupantDeserializer: cellData => CellPlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<CellPlaceable.Serializer>(cellData), this, allPlaceableData),
+                edgeOccupantDeserializer: edgeData => EdgePlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<EdgePlaceable.Serializer>(edgeData), this, allPlaceableData)
+                );
+            
         }
         
     }

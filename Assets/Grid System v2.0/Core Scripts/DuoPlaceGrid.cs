@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Newtonsoft.Json;
+
 
 namespace CustomGridSystem
 {
@@ -212,18 +214,28 @@ namespace CustomGridSystem
         {
             Dictionary<string, string> cellOccupantData = new Dictionary<string, string>();
             Dictionary<string, string> edgeOccupantData = new Dictionary<string, string>();
+            HashSet<TCellOccupant> cellTemp = new HashSet<TCellOccupant>();             // This is because same object can occupy multiple places
+            HashSet<TEdgeOccupant> edgeTemp = new HashSet<TEdgeOccupant>();             // This is because same object can occupy multiple places
 
             foreach (KeyValuePair<string, TCellOccupant> occupant in allCellOccupants)
             {
-                cellOccupantData.Add(occupant.Key, cellOccupantSerializer.Invoke(occupant.Value));
+                if (!cellTemp.Contains(occupant.Value))
+                {
+                    cellOccupantData.Add(occupant.Key, cellOccupantSerializer.Invoke(occupant.Value));
+                    cellTemp.Add(occupant.Value);
+                }
             }
 
             foreach (KeyValuePair<string, TEdgeOccupant> occupant in allEdgeOccupants)
             {
-                cellOccupantData.Add(occupant.Key, edgeOccupantSerializer.Invoke(occupant.Value));
+                if (!edgeTemp.Contains(occupant.Value))
+                {
+                    edgeOccupantData.Add(occupant.Key, edgeOccupantSerializer.Invoke(occupant.Value));
+                    edgeTemp.Add(occupant.Value);
+                }
             }
 
-            return JsonUtility.ToJson(
+            return JsonConvert.SerializeObject(
                 new DuoPlaceGridData()
                 {
                     baseGridData = base.SerializeGrid(),
@@ -235,7 +247,7 @@ namespace CustomGridSystem
 
         public void DeserializeWithOccupants(string data, Func<string, TCellOccupant> cellOccupantDeserializer, Func<string, TEdgeOccupant> edgeOccupantDeserializer)
         {
-            DuoPlaceGridData gridData = JsonUtility.FromJson<DuoPlaceGridData>(data);
+            DuoPlaceGridData gridData = JsonConvert.DeserializeObject<DuoPlaceGridData>(data);
             base.DeserializeGrid(gridData.baseGridData);
 
             if (this.allCellOccupants != null) this.allCellOccupants.Clear();
@@ -247,12 +259,16 @@ namespace CustomGridSystem
 
             foreach (KeyValuePair<string, string> occupant in gridData.cellOccupantData)
             {
-                allCellOccupants.Add(occupant.Key, cellOccupantDeserializer.Invoke(occupant.Value));
+                TCellOccupant oc = cellOccupantDeserializer.Invoke(occupant.Value);
+                if (!allCellOccupants.ContainsKey(occupant.Key))
+                    allCellOccupants.Add(occupant.Key, oc);
             }
 
             foreach (KeyValuePair<string, string> occupant in gridData.edgeOccupantData)
             {
-                allEdgeOccupants.Add(occupant.Key, edgeOccupantDeserializer.Invoke(occupant.Value));
+                TEdgeOccupant oc = edgeOccupantDeserializer.Invoke(occupant.Value);
+                if (!allEdgeOccupants.ContainsKey(occupant.Key))
+                    allEdgeOccupants.Add(occupant.Key, oc);
             }
         }
         #endregion

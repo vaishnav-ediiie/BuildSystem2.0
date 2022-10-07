@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CustomBuildSystem.Example
@@ -48,6 +49,30 @@ namespace CustomBuildSystem.Example
             {
                 buildSystem.CancelBuild(switchToIdle: true);
             }
+
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                string data = buildSystem.Serialize();
+                PlayerPrefs.SetString("___Data___", data);
+                Debug.Log(data);
+            }
+            
+            if (Input.GetKeyDown(KeyCode.L))
+            {
+                Dictionary<int, PlaceableSOBase> allPlaceableData = new Dictionary<int, PlaceableSOBase>();
+                foreach (EdgePlaceableSO so in edgePlaceables)
+                {
+                    Debug.Log($"Added ID: {so.ID}");
+                    allPlaceableData.Add(so.ID, so);
+                }
+                foreach (CellPlaceableSO so in cellPlaceables)
+                {
+                    Debug.Log($"Added ID: {so.ID}");
+                    allPlaceableData.Add(so.ID, so);
+                }
+                buildSystem.Deserialize(PlayerPrefs.GetString("___Data___"), allPlaceableData);
+            }
+            
         }
 
         private void UpdatePlacingState(EdgePlaceableSO edge, CellPlaceableSO cell)

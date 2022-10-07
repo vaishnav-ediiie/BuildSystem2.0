@@ -8,14 +8,13 @@ public class EdgeDecorator : IMonoPlaceable
 {
     [NonSerialized] public EdgePlaceableSO Scriptable;
     [NonSerialized] public EdgePlaceable Parent;
-    [NonSerialized] public EdgeNumber Number;
     [NonSerialized] public int Rotation;
+    public EdgeNumber Number => Parent.Number;
 
-    public void Init(EdgePlaceableSO scriptable, EdgePlaceable parent, EdgeNumber number, int rotation, LayerMask layer)
+    public void Init(EdgePlaceableSO scriptable, EdgePlaceable parent, int rotation, LayerMask layer)
     {
         this.Scriptable = scriptable;
         this.Parent = parent;
-        this.Number = number;
         this.Rotation = rotation;
         this.gameObject.SetLayerRecursive(layer.GetLayer());
     }

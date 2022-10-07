@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using UnityEngine;
 
 
@@ -219,7 +220,7 @@ namespace CustomGridSystem
             bool isFinite = gridType is GridTypeFinite;
             if (isFinite) lastCell = gridType.LastCellNumber;
             else lastCell = CellNumber.Zero;
-            return JsonUtility.ToJson(
+            return JsonConvert.SerializeObject(
                 new SimpleGridData()
                 {
                     cellSize = CellSize,
@@ -236,7 +237,7 @@ namespace CustomGridSystem
         /// <param name="data"></param>
         public void DeserializeGrid(string data)
         {
-            SimpleGridData gridData = JsonUtility.FromJson<SimpleGridData>(data);
+            SimpleGridData gridData = JsonConvert.DeserializeObject<SimpleGridData>(data);
             Vector2 oldCellSize = this.CellSize;
             Vector2 oldPosition = this.AnchorPosition;
             float oldY = this.GridYPos;

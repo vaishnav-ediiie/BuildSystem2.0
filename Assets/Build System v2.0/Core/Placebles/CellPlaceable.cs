@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using CustomGridSystem;
 using UnityEngine;
 
@@ -21,7 +20,7 @@ namespace CustomBuildSystem
             this.Decorators = new List<CellDecorator>();
             this.gameObject.SetLayerRecursive(layer.GetLayer());
         }
-
+        
         public override GameObject GetDeletePrefab() => Scriptable.placingError;
         
         public override void Occupy(BuildSystem buildSystem)
@@ -74,6 +73,85 @@ namespace CustomBuildSystem
         {
             if (!Decorators.Contains(deco))
                 this.Decorators.Add(deco);
+        }
+
+
+        [Serializable]
+        public class Serializer
+        {
+            public int scriptableID;
+            public int row;
+            public int column;
+            public int rotation;
+            public DecoSer[] decorators;
+
+            public Serializer()
+            {
+                
+            }
+            
+            public Serializer(CellPlaceable source)
+            {
+                this.scriptableID = source.Scriptable.ID;
+                this.row = source.Number.row;
+                this.column = source.Number.column;
+                this.rotation = source.Rotation;
+                decorators = new DecoSer[source.Decorators.Count];
+                int i = 0;
+                foreach (CellDecorator deco in source.Decorators)
+                {
+                    decorators[i] = new DecoSer(deco);
+                    i++;
+                }
+            }
+
+            public static CellPlaceable Deserialize(Serializer serializer, BuildSystem buildSystem, Dictionary<int, PlaceableSOBase> allPlaceableData)
+            {
+                CellPlaceableSO placeableSo = allPlaceableData[serializer.scriptableID] as CellPlaceableSO;
+                if (placeableSo == null)
+                {
+                    foreach (KeyValuePair<int,PlaceableSOBase> placeableSoBase in allPlaceableData)
+                    {
+                        Debug.Log($" We Have: {placeableSoBase.Key} as {placeableSoBase.Value.GetType()}");
+                    }
+                    Debug.Log($"Not found with id: {serializer.scriptableID} as CellPlaceableSO");
+                }
+                CellNumber cellNumber = new CellNumber(serializer.row, serializer.column);
+                Vector3 position = buildSystem.gridCurrent.CellNumberToPosition(cellNumber);
+                Quaternion rotation = Quaternion.Euler(0, serializer.rotation, 0);
+                CellPlaceable parent = Instantiate(placeableSo.placed, position, rotation).AddComponent<CellPlaceable>();
+                parent.Init(placeableSo, cellNumber, serializer.rotation, buildSystem.ProbsLayer);
+                parent.Occupy(buildSystem);
+                
+                foreach (DecoSer decoSer in serializer.decorators)
+                {
+                    CellPlaceableSO decoSO = allPlaceableData[decoSer.scriptableID] as CellPlaceableSO;
+                    Quaternion decoRot = Quaternion.Euler(0, decoSer.rotation, 0);
+                    CellDecorator decoPlaced = Instantiate(decoSO.placed, position, decoRot).AddComponent<CellDecorator>();
+                    decoPlaced.Init(decoSO, parent, decoSer.rotation, buildSystem.ProbsLayer);
+                    decoPlaced.Occupy(buildSystem);
+
+                }
+                
+                return parent;
+            }
+        }
+        
+        [Serializable]
+        public class DecoSer
+        {
+            public int scriptableID;
+            public int rotation;
+
+            public DecoSer()
+            {
+            }
+
+            public DecoSer(CellDecorator source)
+            {
+                scriptableID = source.Scriptable.ID;
+                rotation = source.Rotation;
+            }
         }
     }
 }

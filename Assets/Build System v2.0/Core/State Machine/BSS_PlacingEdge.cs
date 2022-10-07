@@ -52,13 +52,13 @@ namespace CustomBuildSystem
                 if (parent == null) return;
 
                 EdgeDecorator placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<EdgeDecorator>();
-                placed.Init(PlaceableSo, parent, EdgeNumber, Rotation, BuildSystem.ProbsLayer);
+                placed.Init(PlaceableSo, parent, Rotation, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
             else
             {
                 EdgePlaceable placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<EdgePlaceable>();
-                placed.Init(PlaceableSo, EdgeNumber, BuildSystem.ProbsLayer);
+                placed.Init(PlaceableSo, EdgeNumber, Rotation, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
             BuildSystem.SwitchState<BSS_Idle>();

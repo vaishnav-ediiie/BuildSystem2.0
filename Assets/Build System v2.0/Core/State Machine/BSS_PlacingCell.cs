@@ -64,7 +64,7 @@ namespace CustomBuildSystem
                 if (parent == null) return;
                 
                 CellDecorator placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<CellDecorator>();
-                placed.Init(PlaceableSo, parent, CellNumber, Rotation, BuildSystem.ProbsLayer);
+                placed.Init(PlaceableSo, parent, Rotation, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
             else

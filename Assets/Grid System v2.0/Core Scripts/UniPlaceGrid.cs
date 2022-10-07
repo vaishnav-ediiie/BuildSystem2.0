@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace CustomGridSystem
@@ -105,7 +106,7 @@ namespace CustomGridSystem
                 allOccupantData.Add(occupant.Key, occupantSerializer.Invoke(occupant.Value));
             }
             
-            return JsonUtility.ToJson(
+            return JsonConvert.SerializeObject(
                 new UniPlaceGridData()
                 {
                     baseGridData = base.SerializeGrid(),
@@ -116,7 +117,7 @@ namespace CustomGridSystem
 
         public void DeserializeWithOccupants(string data, Func<string, TOccupant> occupantDeserializer)
         {
-            UniPlaceGridData gridData = JsonUtility.FromJson<UniPlaceGridData>(data);
+            UniPlaceGridData gridData = JsonConvert.DeserializeObject<UniPlaceGridData>(data);
             base.DeserializeGrid(gridData.baseGridData);
             
             if (this.allOccupants != null) this.allOccupants.Clear();
