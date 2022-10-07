@@ -12,5 +12,6 @@ namespace CustomBuildSystem
         public abstract GameObject GetDeletePrefab();
         public abstract void UnOccupy(BuildSystem buildSystem);
         public abstract void Occupy(BuildSystem buildSystem);
+        public abstract bool HasDecorator(PlaceableSOBase scriptable);
     }
 }

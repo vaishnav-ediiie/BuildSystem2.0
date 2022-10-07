@@ -1,24 +1,24 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using CustomGridSystem;
 using UnityEngine;
 
 namespace CustomBuildSystem
 {
-    [Serializable]
     public class CellPlaceable : IMonoPlaceable
     {
-        [HideInInspector] public CellPlaceableSO Scriptable;
-        [HideInInspector] public CellNumber Number;
-        [HideInInspector] public int Rotation;
-        [HideInInspector] public List<IPlaceable> Decorators;
+        [NonSerialized] public CellPlaceableSO Scriptable;
+        [NonSerialized] public CellNumber Number;
+        [NonSerialized] public int Rotation;
+        [NonSerialized] public List<CellDecorator> Decorators;
 
         public void Init(CellPlaceableSO scriptable, CellNumber number, int rotation, LayerMask layer)
         {
             this.Scriptable = scriptable;
             this.Number = number;
             this.Rotation = rotation;
-            this.Decorators = new List<IPlaceable>();
+            this.Decorators = new List<CellDecorator>();
             this.gameObject.SetLayerRecursive(layer.GetLayer());
         }
 
@@ -39,7 +39,7 @@ namespace CustomBuildSystem
                 buildSystem.gridCurrent.OccupyCell(number, this);
             }
         }
-        
+
         public override void UnOccupy(BuildSystem buildSystem)
         {
             CellLayoutInfo layoutInfo = Scriptable.LayoutInfo(Number, Rotation);
@@ -55,5 +55,25 @@ namespace CustomBuildSystem
             }
         }
 
+        public override bool HasDecorator(PlaceableSOBase scriptable)
+        {
+            foreach (CellDecorator decorator in Decorators)
+            {
+                if (decorator.Scriptable == scriptable) return true;
+            }
+            return false;
+        }
+        
+        public void RemoveDecorator(CellDecorator deco)
+        {
+            if (Decorators.Contains(deco))
+                this.Decorators.Remove(deco);
+        }
+
+        public void AddDecorator(CellDecorator deco)
+        {
+            if (!Decorators.Contains(deco))
+                this.Decorators.Add(deco);
+        }
     }
 }

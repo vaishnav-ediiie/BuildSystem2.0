@@ -7,8 +7,16 @@ public class CellVisuals : MonoBehaviour
 {
     [SerializeField] private TextMeshPro textMesh;
 
-    public void Init(CellNumber cellNumber)
+    public void Init(CellNumber cellNumber, bool displayNumber)
     {
-        this.name = textMesh.text = cellNumber.ToString();
+        this.name = cellNumber.ToString();
+        if (displayNumber)
+        {
+            textMesh.text = cellNumber.ToString();
+        }
+        else
+        {
+            textMesh.enabled = false;
+        }
     }
 }

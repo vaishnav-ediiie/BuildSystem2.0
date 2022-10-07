@@ -9,6 +9,8 @@ namespace CustomBuildSystem
         [SerializeField] private BuildSystem buildSystem;
         [SerializeField] private CellVisuals cellObject;
         [SerializeField] private EdgeVisuals edgeObject;
+        [SerializeField] private bool displayEdges;
+        [SerializeField] private bool displayCellNumbers;
 
 
         private void OnEnable()
@@ -27,9 +29,12 @@ namespace CustomBuildSystem
 
             foreach (CellNumber cellNumber in CellNumber.LoopCells(CellNumber.Zero, simpleGrid.LastCellNumber))
             {
-                Instantiate(cellObject, simpleGrid.CellNumberToPosition(cellNumber), Quaternion.identity, transform).Init(cellNumber);
-                Instantiate(edgeObject, simpleGrid.EdgeNumberToPosition(new EdgeNumber(cellNumber, EdgeType.Horizontal)), Quaternion.identity, transform).Init($"{cellNumber} Horizontal", true);
-                Instantiate(edgeObject, simpleGrid.EdgeNumberToPosition(new EdgeNumber(cellNumber, EdgeType.Vertical)), Quaternion.identity, transform).Init($"{cellNumber} Vertical", false);
+                Instantiate(cellObject, simpleGrid.CellNumberToPosition(cellNumber), Quaternion.identity, transform).Init(cellNumber, displayCellNumbers);
+                if (displayEdges)
+                {
+                    Instantiate(edgeObject, simpleGrid.EdgeNumberToPosition(new EdgeNumber(cellNumber, EdgeType.Horizontal)), Quaternion.identity, transform).Init($"{cellNumber} Horizontal", true, displayCellNumbers);
+                    Instantiate(edgeObject, simpleGrid.EdgeNumberToPosition(new EdgeNumber(cellNumber, EdgeType.Vertical)), Quaternion.identity, transform).Init($"{cellNumber} Vertical", false, displayCellNumbers);
+                }
             }
 
         }

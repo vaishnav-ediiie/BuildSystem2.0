@@ -115,14 +115,20 @@ namespace CustomBuildSystem
         /// <para>ScriptableObject being placed = <c>placeable.PlaceableSo</c></para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
-        /// <returns>Return true if you want to confirm placement, false otherwise</returns>
+        /// <returns>Return true if you want to show placing Okay, false if you want to show placing Error</returns>
         public virtual bool ValidateEdgePlacement(BSS_PlacingEdge placeable)
         {
             if (placeable.PlaceableSo.cellsCount <= 1)
             {
-                return !placeable.BuildSystem.gridCurrent.IsEdgeOccupied(placeable.EdgeNumber);
+                if (placeable.PlaceableSo.isDecorator)
+                {
+                    EdgePlaceable parent = placeable.BuildSystem.gridCurrent.GetEdgeOccupant(placeable.EdgeNumber, null);
+                    return parent != null && !parent.HasDecorator(placeable.PlaceableSo) ;
+                } 
+                return ! placeable.BuildSystem.gridCurrent.IsEdgeOccupied(placeable.EdgeNumber);
             }
 
+            
             bool isHorz = (placeable.EdgeNumber.edgeType == EdgeType.Horizontal);
             EdgeNumber first;
             if (isHorz)
@@ -137,13 +143,14 @@ namespace CustomBuildSystem
             }
 
             CellNumber current = new CellNumber(0, 0);
+            bool check = !placeable.PlaceableSo.isDecorator;
 
             for (int _ = 0; _ < placeable.PlaceableSo.cellsCount; _++)
             {
                 EdgeNumber en = first + current;
                 bool isNumberValid = placeable.BuildSystem.gridCurrent.IsEdgeNumberValid(en);
                 bool isOccupied = placeable.BuildSystem.gridCurrent.IsEdgeOccupied(en);
-                if (!isNumberValid || isOccupied)
+                if (!isNumberValid || isOccupied == check)
                 {
                     return false;
                 }

@@ -9,5 +9,6 @@ namespace CustomBuildSystem
         [SerializeField] internal GameObject placingError;
         [SerializeField] internal GameObject placed;
         [SerializeField] internal Sprite Icon;
+        [SerializeField] internal bool isDecorator = false;
     }
 }

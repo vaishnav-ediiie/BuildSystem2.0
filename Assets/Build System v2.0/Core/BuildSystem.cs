@@ -31,7 +31,7 @@ namespace CustomBuildSystem
         internal DuoPlaceGrid<CellPlaceable, EdgePlaceable> gridBelow;
         internal DuoPlaceGrid<CellPlaceable, EdgePlaceable> gridAbove;
        
-        public BuildSystemBrain Brain;
+        public BuildSystemBrain Brain { get; private set; }
 
         public DuoPlaceGrid<CellPlaceable, EdgePlaceable> GridCurrent => gridCurrent;
         public Transform Player => player;
@@ -67,6 +67,7 @@ namespace CustomBuildSystem
                 return;
             }
 
+            brainInstance.CopyEvents(this.Brain);
             this.Brain = brainInstance;
             this.Brain.Call_GridUpdate();
         }
@@ -126,29 +127,13 @@ namespace CustomBuildSystem
 
         public void StartBuild(EdgePlaceableSO edgePlaceableSo)
         {
-            Type activeType = currentState.GetType();
-            if (activeType == typeof(BSS_PlacingEdge))
-            {
-                ((BSS_PlacingEdge)currentState).CancelPlacement();
-                SwitchState<BSS_PlacingEdge>().Setup(edgePlaceableSo);
-            }
-
-            if (activeType == typeof(BSS_PlacingCell)) ((BSS_PlacingCell)currentState).CancelPlacement();
-
+            CancelBuild(false);
             SwitchState<BSS_PlacingEdge>().Setup(edgePlaceableSo);
         }
 
         public void StartBuild(CellPlaceableSO cellPlaceableSo)
         {
-            Type activeType = currentState.GetType();
-            if (activeType == typeof(BSS_PlacingCell))
-            {
-                ((BSS_PlacingCell)currentState).CancelPlacement();
-                SwitchState<BSS_PlacingCell>().Setup(cellPlaceableSo);
-            }
-
-            if (activeType == typeof(BSS_PlacingEdge)) ((BSS_PlacingEdge)currentState).CancelPlacement();
-
+            CancelBuild(false);
             SwitchState<BSS_PlacingCell>().Setup(cellPlaceableSo);
         }
 

@@ -7,18 +7,17 @@ public class EdgeVisuals : MonoBehaviour
 {
     [SerializeField] private TextMeshPro textMesh;
 
-    public void Init(EdgeNumber en)
+    public void Init(string text, bool isHorz, bool displayText)
     {
-        this.name = textMesh.text = en.ToString();
-        if (en.edgeType == EdgeType.Horizontal)
+        this.name = text;
+        if (displayText)
         {
-            transform.Rotate(0f, 90f, 0f);
+            textMesh.text = text;
         }
-    }
-    
-    public void Init(string text, bool isHorz)
-    {
-        this.name = textMesh.text = text;
+        else
+        {
+            textMesh.enabled = false;
+        }
         if (isHorz)
         {
             transform.Rotate(0f, 90f, 0f);

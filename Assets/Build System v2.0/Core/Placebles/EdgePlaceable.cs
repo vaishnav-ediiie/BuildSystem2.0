@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using CustomGridSystem;
 using UnityEngine;
 
@@ -7,15 +8,15 @@ namespace CustomBuildSystem
 {
     public class EdgePlaceable : IMonoPlaceable
     {
-        [HideInInspector] public EdgePlaceableSO Scriptable;
-        [HideInInspector] public EdgeNumber Number;
-        [HideInInspector] public List<IPlaceable> Decorators;
+        [NonSerialized] public EdgePlaceableSO Scriptable;
+        [NonSerialized] public EdgeNumber Number;
+        [NonSerialized] public List<EdgeDecorator> Decorators;
 
         public void Init(EdgePlaceableSO scriptable, EdgeNumber number, LayerMask layer)
         {
             this.Scriptable = scriptable;
             this.Number = number;
-            this.Decorators = new List<IPlaceable>();
+            this.Decorators = new List<EdgeDecorator>();
             this.gameObject.SetLayerRecursive(layer.GetLayer());
         }
 
@@ -23,6 +24,13 @@ namespace CustomBuildSystem
 
         public override void Occupy(BuildSystem buildSystem)
         {
+            if (Scriptable.cellsCount <= 1)
+            {
+                Debug.Log($"Occupy {Number}");
+                buildSystem.gridCurrent.OccupyEdge(Number, this);
+                return;
+            }
+            
             if (Number.edgeType == EdgeType.Horizontal)
             {
                 int startRow = Number.CellAfter.row - Scriptable.centerCellIndex;
@@ -52,6 +60,13 @@ namespace CustomBuildSystem
 
         public override void UnOccupy(BuildSystem buildSystem)
         {
+            if (Scriptable.cellsCount <= 1)
+            {
+                buildSystem.gridCurrent.EmptyEdge(Number);
+                return;
+            }
+
+            
             if (Number.edgeType == EdgeType.Horizontal)
             {
                 int startRow = Number.CellAfter.row - Scriptable.centerCellIndex;
@@ -78,5 +93,28 @@ namespace CustomBuildSystem
                 }
             }
         }
+        
+        public void RemoveDecorator(EdgeDecorator deco)
+        {
+            if (Decorators.Contains(deco))
+                this.Decorators.Remove(deco);
+        }
+
+        public void AddDecorator(EdgeDecorator deco)
+        {
+            if (!Decorators.Contains(deco))
+                this.Decorators.Add(deco);
+        }
+
+        public override bool HasDecorator(PlaceableSOBase scriptable)
+        {
+            foreach (EdgeDecorator decorator in Decorators)
+            {
+                if (decorator.Scriptable == scriptable) return true;
+            }
+
+            return false;
+        }
+
     }
 }

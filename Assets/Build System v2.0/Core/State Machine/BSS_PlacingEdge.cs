@@ -46,9 +46,21 @@ namespace CustomBuildSystem
         
         internal void ConfirmPlacement()
         {
-            EdgePlaceable placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<EdgePlaceable>();
-            placed.Init(PlaceableSo, EdgeNumber, BuildSystem.ProbsLayer);
-            placed.Occupy(BuildSystem);
+            if (PlaceableSo.isDecorator)
+            {
+                EdgePlaceable parent = BuildSystem.gridCurrent.GetEdgeOccupant(EdgeNumber, null);
+                if (parent == null) return;
+
+                EdgeDecorator placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<EdgeDecorator>();
+                placed.Init(PlaceableSo, parent, EdgeNumber, Rotation, BuildSystem.ProbsLayer);
+                placed.Occupy(BuildSystem);
+            }
+            else
+            {
+                EdgePlaceable placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<EdgePlaceable>();
+                placed.Init(PlaceableSo, EdgeNumber, BuildSystem.ProbsLayer);
+                placed.Occupy(BuildSystem);
+            }
             BuildSystem.SwitchState<BSS_Idle>();
             BuildSystem.Brain.Call_EdgeStateChanged(this, PlacingStage.Placed);
         }
@@ -66,8 +78,8 @@ namespace CustomBuildSystem
             float rotation = (edgeNumber.edgeType == EdgeType.Horizontal) ? -90f : 0f;
             MoveTo(GridCurrent.EdgeNumberToPosition(edgeNumber), edgeNumber);
             RotateTo(0, rotation, 0);
-            Mark(this.BuildSystem.Brain.ValidateEdgePlacement(this));
             EdgeNumber = edgeNumber;
+            Mark(this.BuildSystem.Brain.ValidateEdgePlacement(this));
         }
     }
 }

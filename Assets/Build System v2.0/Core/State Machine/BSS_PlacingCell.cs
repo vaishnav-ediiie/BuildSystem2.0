@@ -17,6 +17,14 @@ namespace CustomBuildSystem
             this.PlaceableSo = placeable;
             CurrentSpawned = Object.Instantiate(placeable.placingOkay); 
             Rotation = 0;
+
+            if (placeable.isDecorator)
+            {
+                ConditionType current = placeable.placementCriteria.cellCenter.conditionType;
+                if (current != ConditionType.OccupiedByAny && current != ConditionType.OccupiedBySpecific) 
+                    placeable.placementCriteria.cellCenter.conditionType = ConditionType.OccupiedByAny;
+            }
+            
             CellNumber = GetReferenceCell(screenCenter);
             UpdateVisuals(CellNumber, forceMark: true);
         }
@@ -50,9 +58,21 @@ namespace CustomBuildSystem
 
         internal void ConfirmPlacement()
         {
-            CellPlaceable placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<CellPlaceable>();
-            placed.Init(PlaceableSo, CellNumber, Rotation, BuildSystem.ProbsLayer);
-            placed.Occupy(BuildSystem);
+            if (PlaceableSo.isDecorator)
+            {
+                CellPlaceable parent = BuildSystem.gridCurrent.GetCellOccupant(CellNumber, null);
+                if (parent == null) return;
+                
+                CellDecorator placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<CellDecorator>();
+                placed.Init(PlaceableSo, parent, CellNumber, Rotation, BuildSystem.ProbsLayer);
+                placed.Occupy(BuildSystem);
+            }
+            else
+            {
+                CellPlaceable placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<CellPlaceable>();
+                placed.Init(PlaceableSo, CellNumber, Rotation, BuildSystem.ProbsLayer);
+                placed.Occupy(BuildSystem);
+            }
             BuildSystem.SwitchState<BSS_Idle>();
             BuildSystem.Brain.Call_CellStateChanged(this, PlacingStage.Placed);
         }
