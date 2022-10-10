@@ -9,25 +9,25 @@ namespace CustomBuildSystem
     public class CellPlacementCriteria
     {
         [Tooltip("Cells exactly one floor above the object")]
-        public Condition cellAbove;
+        public CellCondition cellAbove;
 
         [Tooltip("Cells exactly one floor below the object")]
-        public Condition cellBelow;
+        public CellCondition cellBelow;
 
         [Tooltip("Cells that are within the bonds of object")]
-        public Condition cellCenter = Condition.CenterCellCondition;
+        public CellCondition cellCenter = CellCondition.CenterCondition;
 
         [Tooltip("Cells that share common edge")]
-        public Condition cellSide;
+        public CellCondition cellSide;
 
         [Tooltip("Cells that share same corner")]
-        public Condition cellCorner;
+        public CellCondition cellCorner;
 
         [Tooltip("Boundary of Object")]
-        public Condition edgeBoundary;
+        public CellCondition edgeBoundary;
 
         [Tooltip("Edges that are enclosed")]
-        public Condition edgeBetween;
+        public CellCondition edgeBetween;
         
         
         public bool AreSatisfied(BuildSystem buildSystem, CellLayoutInfo layoutInfo)
@@ -174,7 +174,7 @@ namespace CustomBuildSystem
             return false;
         }
 
-        private bool CheckCellsWithinBonds(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, Condition condition, CellLayoutInfo layoutInfo, string name)
+        private bool CheckCellsWithinBonds(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, CellCondition condition, CellLayoutInfo layoutInfo, string name)
         {
             GameDebug.AddLineToMyInfo(BuildSystem.Instance, $"CheckCellsWithinBonds {name} {condition.conditionType}>: ");
             if (condition.conditionType == ConditionType.DontCare)

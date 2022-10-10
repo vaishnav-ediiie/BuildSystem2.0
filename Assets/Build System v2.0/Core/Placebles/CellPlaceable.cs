@@ -47,6 +47,11 @@ namespace CustomBuildSystem
                 buildSystem.gridCurrent.EmptyCell(Number);
                 return;
             }
+
+            foreach (CellDecorator decorator in Decorators)
+            {
+                Destroy(decorator.gameObject);
+            }
             
             foreach (CellNumber cellNumber in CellNumber.LoopCells(layoutInfo.BottomLeft, layoutInfo.TopRight+1))
             {
@@ -62,7 +67,9 @@ namespace CustomBuildSystem
             }
             return false;
         }
-        
+
+        public override int GetScriptableID() => Scriptable.ID;
+
         public void RemoveDecorator(CellDecorator deco)
         {
             if (Decorators.Contains(deco))
@@ -105,12 +112,12 @@ namespace CustomBuildSystem
                 }
             }
 
-            public static CellPlaceable Deserialize(Serializer serializer, BuildSystem buildSystem, Dictionary<int, PlaceableSOBase> allPlaceableData)
+            public static CellPlaceable Deserialize(Serializer serializer, BuildSystem buildSystem)
             {
-                CellPlaceableSO placeableSo = allPlaceableData[serializer.scriptableID] as CellPlaceableSO;
+                CellPlaceableSO placeableSo = buildSystem.Brain.AllPlaceableData[serializer.scriptableID] as CellPlaceableSO;
                 if (placeableSo == null)
                 {
-                    foreach (KeyValuePair<int,PlaceableSOBase> placeableSoBase in allPlaceableData)
+                    foreach (KeyValuePair<int,PlaceableSOBase> placeableSoBase in buildSystem.Brain.AllPlaceableData)
                     {
                         Debug.Log($" We Have: {placeableSoBase.Key} as {placeableSoBase.Value.GetType()}");
                     }
@@ -125,7 +132,7 @@ namespace CustomBuildSystem
                 
                 foreach (DecoSer decoSer in serializer.decorators)
                 {
-                    CellPlaceableSO decoSO = allPlaceableData[decoSer.scriptableID] as CellPlaceableSO;
+                    CellPlaceableSO decoSO = buildSystem.Brain.AllPlaceableData[decoSer.scriptableID] as CellPlaceableSO;
                     Quaternion decoRot = Quaternion.Euler(0, decoSer.rotation, 0);
                     CellDecorator decoPlaced = Instantiate(decoSO.placed, position, decoRot).AddComponent<CellDecorator>();
                     decoPlaced.Init(decoSO, parent, decoSer.rotation, buildSystem.ProbsLayer);

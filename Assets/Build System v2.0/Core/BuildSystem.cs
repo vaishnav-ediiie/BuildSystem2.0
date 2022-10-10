@@ -11,7 +11,7 @@ namespace CustomBuildSystem
     [DefaultExecutionOrder(-123)]
     public class BuildSystem : MonoBehaviour
     {
-        // TODO: Remove This. BuildSystem should not and is not a Singleton. If you find this, means I forgot to remove it.
+        // TODO: Remove This. BuildSystem should not and is not a Singleton. If you find this, means I forgot to remove it. Remove every references of it, they are all for debugging only.
         public static BuildSystem Instance;
         
         [Header("References")] [SerializeField]
@@ -67,6 +67,10 @@ namespace CustomBuildSystem
                 return;
             }
 
+            if (brainInstance.AllPlaceableData == null || brainInstance.AllPlaceableData.Count == 0)
+            {
+                Debug.LogError("AllPlaceableData in build system brain is empty, Save & Load wont work.");
+            } 
             brainInstance.CopyEvents(this.Brain);
             this.Brain = brainInstance;
             this.Brain.Call_GridUpdate();
@@ -168,11 +172,11 @@ namespace CustomBuildSystem
             );
         }
         
-        public void Deserialize(string data, Dictionary<int, PlaceableSOBase> allPlaceableData)
+        public void Deserialize(string data)
         {
             gridCurrent.DeserializeWithOccupants(data, 
-                cellOccupantDeserializer: cellData => CellPlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<CellPlaceable.Serializer>(cellData), this, allPlaceableData),
-                edgeOccupantDeserializer: edgeData => EdgePlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<EdgePlaceable.Serializer>(edgeData), this, allPlaceableData)
+                cellOccupantDeserializer: cellData => CellPlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<CellPlaceable.Serializer>(cellData), this),
+                edgeOccupantDeserializer: edgeData => EdgePlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<EdgePlaceable.Serializer>(edgeData), this)
                 );
             
         }

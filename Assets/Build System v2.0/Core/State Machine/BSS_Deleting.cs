@@ -7,8 +7,8 @@ namespace CustomBuildSystem
 {
     public class BSS_Deleting : BuiltSystemState
     {
+        public IMonoPlaceable Target { get; private set; }
         private static readonly float MaxRaycastDistance = 500f;
-        private IMonoPlaceable currentFocused;
         private GameObject currentSpawned;
         private Ray currentRay;
         private Vector2 center;
@@ -28,7 +28,7 @@ namespace CustomBuildSystem
                 RedoRaycast(ray);
             }
 
-            if (currentFocused != null && BuildSystem.Brain.ShouldDeleteObject(currentFocused))
+            if (Target != null && BuildSystem.Brain.ShouldDeleteObject(Target))
             {
                 ConfirmDelete();
             }
@@ -48,7 +48,7 @@ namespace CustomBuildSystem
                     layerMask: BuildSystem.ProbsLayer))
             {
                 IMonoPlaceable comp = hitInfo.collider.GetComponentInParent<IMonoPlaceable>();
-                if (comp != null && comp != currentFocused)
+                if (comp != null && comp != Target)
                 {
                     SwitchActive(comp);
                 }
@@ -62,25 +62,25 @@ namespace CustomBuildSystem
         void SwitchActive(IMonoPlaceable newOne)
         {
             SetCurrentRendererActive(true);
-            currentFocused = newOne;
+            Target = newOne;
             SetCurrentRendererActive(false);
 
             if (currentSpawned) Object.Destroy(currentSpawned);
             currentSpawned = Object.Instantiate(newOne.GetDeletePrefab());
-            currentSpawned.transform.CopyFrom(currentFocused.transform);
+            currentSpawned.transform.CopyFrom(Target.transform);
         }
 
         void EmptyFocus()
         {
             SetCurrentRendererActive(true);
-            currentFocused = null;
+            Target = null;
             if (currentSpawned) Object.Destroy(currentSpawned);
         }
 
         void SetCurrentRendererActive(bool value)
         {
-            if (currentFocused == null) return;
-            foreach (Renderer renderer in currentFocused.GetComponentsInChildren<Renderer>())
+            if (Target == null) return;
+            foreach (Renderer renderer in Target.GetComponentsInChildren<Renderer>())
             {
                 renderer.enabled = value;
             }
@@ -88,8 +88,8 @@ namespace CustomBuildSystem
         
         private void ConfirmDelete()
         {
-            currentFocused.UnOccupy(BuildSystem);
-            Object.Destroy(currentFocused.gameObject);
+            Target.UnOccupy(BuildSystem);
+            Object.Destroy(Target.gameObject);
             Object.Destroy(currentSpawned);
         }
     }

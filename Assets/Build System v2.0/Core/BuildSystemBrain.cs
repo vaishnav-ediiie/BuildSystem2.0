@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CustomGridSystem;
 using UnityEngine;
 
@@ -7,20 +8,23 @@ namespace CustomBuildSystem
 {
     public class BuildSystemBrain
     {
-        public event Action OnGridUpdated;
-        public event Action<BSS_PlacingEdge, PlacingStage> OnEdgeStateChanged;
-        public event Action<BSS_PlacingCell, PlacingStage> OnCellStateChanged;
-
+        public event Action<BSS_PlacingEdge, PlacingState> OnEdgeStateChanged;
+        public event Action<BSS_PlacingCell, PlacingState> OnCellStateChanged;
+        public event Action                                OnGridUpdated;
+        public event Action<BSS_Deleting>                  OnItemDeleted;
+        public Dictionary<int, PlaceableSOBase> AllPlaceableData;
 
         internal void Call_GridUpdate() => OnGridUpdated?.Invoke();
-        internal void Call_EdgeStateChanged(BSS_PlacingEdge placeableSo, PlacingStage newStage) => OnEdgeStateChanged?.Invoke(placeableSo, newStage);
-        internal void Call_CellStateChanged(BSS_PlacingCell placeableSo, PlacingStage newStage) => OnCellStateChanged?.Invoke(placeableSo, newStage);
+        internal void Call_EdgeStateChanged(BSS_PlacingEdge placeableSo, PlacingState newState) => OnEdgeStateChanged?.Invoke(placeableSo, newState);
+        internal void Call_CellStateChanged(BSS_PlacingCell placeableSo, PlacingState newState) => OnCellStateChanged?.Invoke(placeableSo, newState);
+        internal void Call_OnItemDeleted(BSS_Deleting deleting, PlacingState newState) => OnItemDeleted?.Invoke(deleting);
 
-        internal void CopyEvents(BuildSystemBrain brain)
+        internal void CopyEvents(BuildSystemBrain source)
         {
-            this.OnGridUpdated = brain.OnGridUpdated;
-            this.OnEdgeStateChanged = brain.OnEdgeStateChanged;
-            this.OnCellStateChanged = brain.OnCellStateChanged;
+            this.OnGridUpdated = source.OnGridUpdated;
+            this.OnItemDeleted = source.OnItemDeleted;
+            this.OnEdgeStateChanged = source.OnEdgeStateChanged;
+            this.OnCellStateChanged = source.OnCellStateChanged;
         }
 
 
@@ -48,8 +52,9 @@ namespace CustomBuildSystem
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current CellNumber = <c>placeable.CellNumber</c></para>
         /// <para>ScriptableObject being placed = <c>placeable.PlaceableSo</c></para>
-        /// <para>if you want to check base conditions (set in inspector) call</para>
+        /// <para>if you want to check base conditions (set in inspector) call
         /// <c> placeable.PlaceableSo.AreBaseConditionSatisfied(placeable)</c>
+        /// </para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>Return +1 to rotate object by 90 degrees, -1 to rotate object by -90 degrees , 0 to not rotate</returns>
@@ -113,12 +118,16 @@ namespace CustomBuildSystem
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current EdgeNumber = <c>placeable.EdgeNumber</c></para>
         /// <para>ScriptableObject being placed = <c>placeable.PlaceableSo</c></para>
+        /// <para>if you want to check base conditions (set in inspector) call
+        /// <c> placeable.PlaceableSo.AreBaseConditionSatisfied(placeable)</c>
+        /// </para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>Return true if you want to show placing Okay, false if you want to show placing Error</returns>
         public virtual bool ValidateEdgePlacement(BSS_PlacingEdge placeable)
         {
-            if (placeable.PlaceableSo.cellsCount <= 1)
+            return placeable.PlaceableSo.AreBaseConditionsSatisfied(placeable);
+            /*if (placeable.PlaceableSo.cellsCount <= 1)
             {
                 if (placeable.PlaceableSo.isDecorator)
                 {
@@ -159,9 +168,8 @@ namespace CustomBuildSystem
                 else current.column++;
             }
 
-            return true;
+            return true;*/
         }
-        
         
         /// <summary> Called every frame. </summary>
         /// <param name="currentState">Current state of Build System</param>

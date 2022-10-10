@@ -5,6 +5,7 @@
         DontCare = 0,
         MustBeEmpty = 1,
         OccupiedByAny = 2,
-        OccupiedBySpecific = 3
+        OccupiedBySpecific = 3,
+        NotOccupiedBySpecific = 4
     }
 }

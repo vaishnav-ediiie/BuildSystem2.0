@@ -13,5 +13,6 @@ namespace CustomBuildSystem
         public abstract void UnOccupy(BuildSystem buildSystem);
         public abstract void Occupy(BuildSystem buildSystem);
         public abstract bool HasDecorator(PlaceableSOBase scriptable);
+        public abstract int GetScriptableID();
     }
 }

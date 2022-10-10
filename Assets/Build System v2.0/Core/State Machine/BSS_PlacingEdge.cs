@@ -16,8 +16,17 @@ namespace CustomBuildSystem
             this.PlaceableSo = placeable;
             CurrentSpawned = Object.Instantiate(placeable.placingOkay); 
             Rotation = 0;
+            
+            if (placeable.isDecorator)
+            {
+                ConditionType current = placeable.placementCriteria.edgeCenter.conditionType;
+                if (current != ConditionType.OccupiedByAny && current != ConditionType.OccupiedBySpecific) 
+                    placeable.placementCriteria.edgeCenter.conditionType = ConditionType.OccupiedByAny;
+            }
+
+            
             EdgeNumber = GetReferenceEdge(screenCenter);
-            UpdateVisuals(EdgeNumber);
+            UpdateVisuals(EdgeNumber, forceMark: true);
         }
         
         public override void OnUpdate()
@@ -28,19 +37,19 @@ namespace CustomBuildSystem
             if (BuildSystem.Brain.ShouldPlaceEdge(this)) ConfirmPlacement();
         }
 
-        private void Mark(bool cp)
+        private void Mark(bool cp, bool force = false)
         {
-            if (cp == CanPlace) return;
+            if (cp == CanPlace && force == false) return;
 
             if (cp)
             {
                 MarkOkay();
-                BuildSystem.Brain.Call_EdgeStateChanged(this, PlacingStage.PlacingOkay);
+                BuildSystem.Brain.Call_EdgeStateChanged(this, PlacingState.PlacingOkay);
             }
             else
             {
                 MarkError();
-                BuildSystem.Brain.Call_EdgeStateChanged(this, PlacingStage.PlacingError);
+                BuildSystem.Brain.Call_EdgeStateChanged(this, PlacingState.PlacingError);
             }
         }
         
@@ -62,7 +71,7 @@ namespace CustomBuildSystem
                 placed.Occupy(BuildSystem);
             }
             BuildSystem.SwitchState<BSS_Idle>();
-            BuildSystem.Brain.Call_EdgeStateChanged(this, PlacingStage.Placed);
+            BuildSystem.Brain.Call_EdgeStateChanged(this, PlacingState.Placed);
         }
 
         internal void CancelPlacement()
@@ -73,13 +82,13 @@ namespace CustomBuildSystem
 
         }
 
-        private void UpdateVisuals(EdgeNumber edgeNumber)
+        private void UpdateVisuals(EdgeNumber edgeNumber, bool forceMark = false)
         {
             float rotation = (edgeNumber.edgeType == EdgeType.Horizontal) ? -90f : 0f;
             MoveTo(GridCurrent.EdgeNumberToPosition(edgeNumber), edgeNumber);
             RotateTo(0, rotation, 0);
             EdgeNumber = edgeNumber;
-            Mark(this.BuildSystem.Brain.ValidateEdgePlacement(this));
+            Mark(this.BuildSystem.Brain.ValidateEdgePlacement(this), forceMark);
         }
     }
 }

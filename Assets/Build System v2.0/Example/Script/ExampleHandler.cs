@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace CustomBuildSystem.Example
@@ -9,27 +11,37 @@ namespace CustomBuildSystem.Example
         [SerializeField] protected Canvas canvas;
         [SerializeField] private KeyCode quitKeyCode;
         [SerializeField] protected SelectItemPopup selectionPopup;
-        [SerializeField] internal EdgePlaceableSO[] edgePlaceables;
-        [SerializeField] internal CellPlaceableSO[] cellPlaceables;
+        [SerializeField] internal PlaceableSOBase[] allPlaceable;
 
         private void Start()
         {
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
-
-            buildSystem.UseBrain(new ExampleBrain());
+            
+            ExampleBrain exampleBrain = new ExampleBrain
+            {
+                AllPlaceableData = new Dictionary<int, PlaceableSOBase>()
+            };
+            
+            foreach (PlaceableSOBase soBase in allPlaceable)
+            {
+                if (exampleBrain.AllPlaceableData.ContainsKey(soBase.ID)) Debug.LogError($"Multiple placeable with same ID: {soBase.name} & {exampleBrain.AllPlaceableData[soBase.ID].name}");
+                else exampleBrain.AllPlaceableData.Add(soBase.ID, soBase);
+            }
+            buildSystem.UseBrain(exampleBrain);
+            
             buildSystem.Brain.OnCellStateChanged += OnCellStateChanged;
             buildSystem.Brain.OnEdgeStateChanged += OnEdgeStateChanged;
         }
 
-        private void OnEdgeStateChanged(BSS_PlacingEdge placeable, PlacingStage newState)
+        private void OnEdgeStateChanged(BSS_PlacingEdge placeable, PlacingState newState)
         {
-            if (newState == PlacingStage.Placed) buildSystem.StartBuild(placeable.PlaceableSo);
+            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.PlaceableSo);
         }
 
-        private void OnCellStateChanged(BSS_PlacingCell placeable, PlacingStage newState)
+        private void OnCellStateChanged(BSS_PlacingCell placeable, PlacingState newState)
         {
-            if (newState == PlacingStage.Placed) buildSystem.StartBuild(placeable.PlaceableSo);
+            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.PlaceableSo);
         }
 
         private void Update()
@@ -40,7 +52,7 @@ namespace CustomBuildSystem.Example
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None;
                 Instantiate(selectionPopup, canvas.transform)
-                    .Init(edgePlaceables, cellPlaceables, UpdatePlacingState);
+                    .Init(allPlaceable, UpdatePlacingState);
             }
 
             if (Input.GetKey(KeyCode.Tab)) return;
@@ -56,36 +68,20 @@ namespace CustomBuildSystem.Example
                 PlayerPrefs.SetString("___Data___", data);
                 Debug.Log(data);
             }
-            
+
             if (Input.GetKeyDown(KeyCode.L))
             {
-                Dictionary<int, PlaceableSOBase> allPlaceableData = new Dictionary<int, PlaceableSOBase>();
-                foreach (EdgePlaceableSO so in edgePlaceables)
-                {
-                    Debug.Log($"Added ID: {so.ID}");
-                    allPlaceableData.Add(so.ID, so);
-                }
-                foreach (CellPlaceableSO so in cellPlaceables)
-                {
-                    Debug.Log($"Added ID: {so.ID}");
-                    allPlaceableData.Add(so.ID, so);
-                }
-                buildSystem.Deserialize(PlayerPrefs.GetString("___Data___"), allPlaceableData);
+                buildSystem.Deserialize(PlayerPrefs.GetString("___Data___"));
             }
-            
         }
 
-        private void UpdatePlacingState(EdgePlaceableSO edge, CellPlaceableSO cell)
+        private void UpdatePlacingState(PlaceableSOBase placeable)
         {
-            if (edge != null)
+            if (placeable != null)
             {
-                buildSystem.CancelBuild(true);
-                buildSystem.StartBuild(edge);
-            }
-            else if (cell != null)
-            {
-                buildSystem.CancelBuild(true);
-                buildSystem.StartBuild(cell);
+                Type pt = placeable.GetType();
+                if (pt == typeof(EdgePlaceableSO))      buildSystem.StartBuild((EdgePlaceableSO)placeable);
+                else if (pt == typeof(CellPlaceableSO)) buildSystem.StartBuild((CellPlaceableSO)placeable);
             }
 
             Cursor.visible = false;

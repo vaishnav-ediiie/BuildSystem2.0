@@ -24,4 +24,5 @@ public class CellDecorator : IMonoPlaceable
     public override void UnOccupy(BuildSystem buildSystem) => Parent.RemoveDecorator(this);
     public override void Occupy(BuildSystem buildSystem) => Parent.AddDecorator(this);
     public override bool HasDecorator(PlaceableSOBase scriptable) => false;
+    public override int GetScriptableID() => Scriptable.ID;
 }

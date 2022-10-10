@@ -47,12 +47,12 @@ namespace CustomBuildSystem
             if (cp)
             {
                 MarkOkay();
-                BuildSystem.Brain.Call_CellStateChanged(this, PlacingStage.PlacingOkay);
+                BuildSystem.Brain.Call_CellStateChanged(this, PlacingState.PlacingOkay);
             }
             else
             {
                 MarkError();
-                BuildSystem.Brain.Call_CellStateChanged(this, PlacingStage.PlacingError);
+                BuildSystem.Brain.Call_CellStateChanged(this, PlacingState.PlacingError);
             }
         }
 
@@ -74,7 +74,7 @@ namespace CustomBuildSystem
                 placed.Occupy(BuildSystem);
             }
             BuildSystem.SwitchState<BSS_Idle>();
-            BuildSystem.Brain.Call_CellStateChanged(this, PlacingStage.Placed);
+            BuildSystem.Brain.Call_CellStateChanged(this, PlacingState.Placed);
         }
 
         internal void CancelPlacement()

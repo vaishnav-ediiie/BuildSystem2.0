@@ -23,77 +23,33 @@ namespace CustomBuildSystem
         }
 
         public override GameObject GetDeletePrefab() => Scriptable.placingError;
-
+        
         public override void Occupy(BuildSystem buildSystem)
         {
-            if (Scriptable.cellsCount <= 1)
+            foreach (EdgeNumber edgeNumber in Scriptable.LoopAllEdges(Number))
             {
-                Debug.Log($"Occupy {Number}");
-                buildSystem.gridCurrent.OccupyEdge(Number, this);
-                return;
-            }
-            
-            if (Number.edgeType == EdgeType.Horizontal)
-            {
-                int startRow = Number.CellAfter.row - Scriptable.centerCellIndex;
-                EdgeNumber first = new EdgeNumber(startRow, Number.CellAfter.column, Number.edgeType);
-                CellNumber current = new CellNumber(0, 0);
-                for (int _ = 0; _ < Scriptable.cellsCount; _++)
-                {
-                    EdgeNumber e = first + current;
-                    buildSystem.gridCurrent.OccupyEdge(e, this);
-                    current.row++;
-                }
-            }
-            else
-            {
-                int startCol = Number.CellAfter.column - Scriptable.centerCellIndex;
-                EdgeNumber first = new EdgeNumber(Number.CellAfter.row, startCol, Number.edgeType);
-                CellNumber current = new CellNumber(0, 0);
-
-                for (int _ = 0; _ < Scriptable.cellsCount; _++)
-                {
-                    EdgeNumber e = first + current;
-                    buildSystem.gridCurrent.OccupyEdge(e, this);
-                    current.column++;
-                }
+                buildSystem.gridCurrent.OccupyEdge(edgeNumber, this);
             }
         }
 
         public override void UnOccupy(BuildSystem buildSystem)
         {
-            if (Scriptable.cellsCount <= 1)
+            foreach (EdgeNumber edgeNumber in Scriptable.LoopAllEdges(Number))
             {
-                buildSystem.gridCurrent.EmptyEdge(Number);
-                return;
+                buildSystem.gridCurrent.EmptyEdge(edgeNumber);
+            }
+        }
+        
+        public override int GetScriptableID() => Scriptable.ID;
+        
+        public override bool HasDecorator(PlaceableSOBase scriptable)
+        {
+            foreach (EdgeDecorator decorator in Decorators)
+            {
+                if (decorator.Scriptable == scriptable) return true;
             }
 
-            
-            if (Number.edgeType == EdgeType.Horizontal)
-            {
-                int startRow = Number.CellAfter.row - Scriptable.centerCellIndex;
-                EdgeNumber first = new EdgeNumber(startRow, Number.CellAfter.column, Number.edgeType);
-                CellNumber current = new CellNumber(0, 0);
-                for (int _ = 0; _ < Scriptable.cellsCount; _++)
-                {
-                    EdgeNumber e = first + current;
-                    buildSystem.gridCurrent.EmptyEdge(e);
-                    current.row++;
-                }
-            }
-            else
-            {
-                int startCol = Number.CellAfter.column - Scriptable.centerCellIndex;
-                EdgeNumber first = new EdgeNumber(Number.CellAfter.row, startCol, Number.edgeType);
-                CellNumber current = new CellNumber(0, 0);
-
-                for (int _ = 0; _ < Scriptable.cellsCount; _++)
-                {
-                    EdgeNumber e = first + current;
-                    buildSystem.gridCurrent.EmptyEdge(e);
-                    current.column++;
-                }
-            }
+            return false;
         }
         
         public void RemoveDecorator(EdgeDecorator deco)
@@ -108,15 +64,6 @@ namespace CustomBuildSystem
                 this.Decorators.Add(deco);
         }
 
-        public override bool HasDecorator(PlaceableSOBase scriptable)
-        {
-            foreach (EdgeDecorator decorator in Decorators)
-            {
-                if (decorator.Scriptable == scriptable) return true;
-            }
-
-            return false;
-        }
         
         [Serializable]
         public class Serializer
@@ -150,12 +97,12 @@ namespace CustomBuildSystem
                 }
             }
 
-            public static EdgePlaceable Deserialize(Serializer serializer, BuildSystem buildSystem, Dictionary<int, PlaceableSOBase> allPlaceableData)
+            public static EdgePlaceable Deserialize(Serializer serializer, BuildSystem buildSystem)
             {
                 EdgeNumber cellNumber = new EdgeNumber(serializer.row, serializer.column, serializer.EdgyType);
                 Vector3 position = buildSystem.gridCurrent.EdgeNumberToPosition(cellNumber);
                 Quaternion rotation = Quaternion.Euler(0, serializer.rotation, 0);
-                EdgePlaceableSO placeableSo = allPlaceableData[serializer.scriptableID] as EdgePlaceableSO;
+                EdgePlaceableSO placeableSo = buildSystem.Brain.AllPlaceableData[serializer.scriptableID] as EdgePlaceableSO;
                 EdgePlaceable parent = Instantiate(placeableSo.placed, position, rotation).AddComponent<EdgePlaceable>();
                 parent.Init(placeableSo, cellNumber, serializer.rotation, buildSystem.ProbsLayer);
                 parent.Occupy(buildSystem);
@@ -163,7 +110,7 @@ namespace CustomBuildSystem
                 foreach (DecoSer decoSer in serializer.decorators)
                 {
                     Quaternion decoRot = Quaternion.Euler(0, decoSer.rotation, 0);
-                    EdgePlaceableSO decoSO = allPlaceableData[decoSer.scriptableID] as EdgePlaceableSO;
+                    EdgePlaceableSO decoSO = buildSystem.Brain.AllPlaceableData[decoSer.scriptableID] as EdgePlaceableSO;
                     EdgeDecorator decoPlaced = Instantiate(decoSO.placed, position, decoRot).AddComponent<EdgeDecorator>();
                     decoPlaced.Init(decoSO, parent, decoSer.rotation, buildSystem.ProbsLayer);
                     decoPlaced.Occupy(buildSystem);

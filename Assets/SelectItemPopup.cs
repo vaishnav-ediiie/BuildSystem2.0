@@ -9,28 +9,21 @@ public class SelectItemPopup : MonoBehaviour
     [SerializeField] private RMF_RadialMenu radialMenu;
     [SerializeField] private RMF_RadialMenuElement menuElement;
     [SerializeField] private Transform elementsParent;
-    private Action<EdgePlaceableSO, CellPlaceableSO> onCompleteAction;
-    private EdgePlaceableSO[] edgePlaceables;
-    private CellPlaceableSO[] cellPlaceables;
+    private Action<PlaceableSOBase> onCompleteAction;
+    private PlaceableSOBase[] placeables;
 
-    public void Init(EdgePlaceableSO[] edgePlaceables, CellPlaceableSO[] cellPlaceables, Action<EdgePlaceableSO, CellPlaceableSO> onCompleteAction)
+    public void Init(PlaceableSOBase[] placeables, Action<PlaceableSOBase> onCompleteAction)
     {
         this.onCompleteAction = onCompleteAction;
         radialMenu.elements = new List<RMF_RadialMenuElement>();
 
         
-        this.edgePlaceables = edgePlaceables;
-        this.cellPlaceables = cellPlaceables;
+        this.placeables = placeables;
         int i = 0;
-        int elementsCount = edgePlaceables.Length + cellPlaceables.Length;
+        int elementsCount = placeables.Length;
         float angleOffset = 360f / elementsCount;
         
-        foreach (EdgePlaceableSO placeable in edgePlaceables)
-        {
-            CreateElement(angleOffset, placeable.Icon, i);
-            i++;
-        }
-        foreach (CellPlaceableSO placeable in cellPlaceables)
+        foreach (PlaceableSOBase placeable in placeables)
         {
             CreateElement(angleOffset, placeable.Icon, i);
             i++;
@@ -51,14 +44,13 @@ public class SelectItemPopup : MonoBehaviour
         if (Input.GetKey(KeyCode.Tab))return;
         
         int index = radialMenu.selectedIndex;
-        if (index >= 0)
+        if (index >= 0 && index < placeables.Length)
         {
-            if (index < edgePlaceables.Length) onCompleteAction.Invoke(edgePlaceables[index], null);
-            else onCompleteAction.Invoke(null, cellPlaceables[index - edgePlaceables.Length]);
+            onCompleteAction.Invoke(placeables[index]);
         }
         else
         {
-            onCompleteAction.Invoke(null, null);
+            onCompleteAction.Invoke(null);
         }
         Destroy(gameObject);
     }

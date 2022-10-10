@@ -5,12 +5,12 @@ using UnityEngine;
 namespace CustomBuildSystem
 {
     [Serializable]
-    public class Condition : ISerializationCallbackReceiver
+    public class CellCondition : ISerializationCallbackReceiver
     {
         public ConditionType conditionType;
         public PlaceableSOBase occupant;
 
-        public static Condition CenterCondition => new Condition() { conditionType = ConditionType.MustBeEmpty };
+        public static CellCondition CenterCondition => new CellCondition() { conditionType = ConditionType.MustBeEmpty };
         
         /// <summary>Checks if the condition is violated on the given cells</summary>
         /// <returns>true is the condition is not met</returns>
@@ -73,37 +73,37 @@ namespace CustomBuildSystem
         private bool OccupiedBySpecific(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, CellNumber cellNumber)
         {
             CellPlaceable placeable = grid.GetCellOccupant(cellNumber, null);
-            return placeable != null && placeable.Scriptable != occupant;
+            return !(placeable != null && placeable.Scriptable == occupant);
         }
         
         private bool OccupiedBySpecific(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, EdgeNumber edgeNumber)
         {
             EdgePlaceable placeable = grid.GetEdgeOccupant(edgeNumber, null);
-            return placeable != null && placeable.Scriptable != occupant;
+            return !(placeable != null && placeable.Scriptable == occupant);
         }
         
         private bool OccupiedBySpecific(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, CellNumber cell, Direction directions)
         {
             EdgePlaceable placeable = grid.GetEdgeOccupant(cell.GetEdgeNumber(directions), null);
-            return placeable != null && placeable.Scriptable != occupant;
+            return !(placeable != null && placeable.Scriptable == occupant);
         }
         
         private bool NotOccupiedBySpecific(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, CellNumber cellNumber)
         {
             CellPlaceable placeable = grid.GetCellOccupant(cellNumber, null);
-            return placeable == null || placeable.Scriptable != occupant;
+            return !(placeable == null || placeable.Scriptable != occupant);
         }
         
         private bool NotOccupiedBySpecific(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, EdgeNumber edgeNumber)
         {
             EdgePlaceable placeable = grid.GetEdgeOccupant(edgeNumber, null);
-            return placeable == null || placeable.Scriptable != occupant;
+            return !(placeable == null || placeable.Scriptable != occupant);
         }
         
         private bool NotOccupiedBySpecific(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, CellNumber cell, Direction directions)
         {
             EdgePlaceable placeable = grid.GetEdgeOccupant(cell.GetEdgeNumber(directions), null);
-            return placeable == null || placeable.Scriptable != occupant;
+            return !(placeable == null || placeable.Scriptable != occupant);
         }
         
         public void OnBeforeSerialize()

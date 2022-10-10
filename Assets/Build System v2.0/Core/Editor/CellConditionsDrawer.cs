@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-[CustomPropertyDrawer(typeof(Condition))]
+[CustomPropertyDrawer(typeof(CellCondition))]
 public class CellConditionsDrawer : PropertyDrawer
 {
     protected static Dictionary<int, Color> ConditionalColors = new Dictionary<int, Color>()
