@@ -1,6 +1,6 @@
 ﻿namespace CustomBuildSystem
 {
-    public enum PlacingStage
+    public enum PlacingState
     {
         PlacingOkay,
         PlacingError,
