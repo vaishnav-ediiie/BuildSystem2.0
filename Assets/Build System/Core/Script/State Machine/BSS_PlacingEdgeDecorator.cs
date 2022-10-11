@@ -14,7 +14,7 @@ namespace CustomBuildSystem
 
         protected override void HandleRotation()
         {
-            if (!PlaceableSo.copyParentRotation)
+            if (!PlaceableSo.parentRelativeRotation)
             {
                 base.HandleRotation();
             }
@@ -24,10 +24,10 @@ namespace CustomBuildSystem
         {
             base.UpdateVisuals(edgeNumber);
             
-            if (PlaceableSo.copyParentRotation)
+            if (PlaceableSo.parentRelativeRotation)
             {
                 EdgePlaceable placed = BuildSystem.gridCurrent.GetEdgeOccupant(edgeNumber, null);
-                if (placed != null) Rotation = placed.Rotation;
+                if (placed != null) Rotation = placed.Rotation + PlaceableSo.rotationOffset;
             }
             needRemark = true;
         }

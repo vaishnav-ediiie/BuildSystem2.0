@@ -14,17 +14,20 @@ namespace CustomBuildSystem
 
         protected override void HandleRotation()
         {
-            if (!PlaceableSo.copyParentRotation) 
+            if (!PlaceableSo.parentRelativeRotation) 
                 base.HandleRotation();
         }
 
         protected override void UpdateVisuals(CellNumber cellNumber)
         {
             base.UpdateVisuals(cellNumber);
-            if (PlaceableSo.copyParentRotation)
+            if (PlaceableSo.parentRelativeRotation)
             {
                 CellPlaceable placed = BuildSystem.gridCurrent.GetCellOccupant(cellNumber, null);
-                if (placed != null) Rotation = placed.Rotation;
+                if (placed != null)
+                {
+                    Rotation = placed.Rotation + PlaceableSo.rotationOffset;
+                }
             }
 
             needRemark = true;
