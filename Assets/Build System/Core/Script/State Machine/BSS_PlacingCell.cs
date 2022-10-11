@@ -64,7 +64,7 @@ namespace CustomBuildSystem
             else
             {
                 CellPlaceable placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<CellPlaceable>();
-                placed.Init(PlaceableSo, CellNumber, Rotation, BuildSystem.ProbsLayer);
+                placed.Init(PlaceableSo, CellNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
             BuildSystem.SwitchState<BSS_Idle>();

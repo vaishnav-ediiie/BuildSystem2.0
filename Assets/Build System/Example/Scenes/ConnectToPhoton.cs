@@ -1,16 +1,11 @@
 using UnityEngine;
 using Photon.Pun;
 
-public class PlayerConnectionManager : MonoBehaviourPunCallbacks
+public class ConnectToPhoton : MonoBehaviourPunCallbacks
 {
-    [Tooltip("The maximum number of players that can join a single room.")] [SerializeField]
-    protected int m_MaxPlayerCount = 30;
-
-    
     public void Start()
     {
         PhotonNetwork.ConnectUsingSettings();
-        
     }
 
     public override void OnConnectedToMaster()

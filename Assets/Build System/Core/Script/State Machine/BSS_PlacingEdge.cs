@@ -44,7 +44,7 @@ namespace CustomBuildSystem
             else
             {
                 EdgePlaceable placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<EdgePlaceable>();
-                placed.Init(PlaceableSo, EdgeNumber, Rotation, BuildSystem.ProbsLayer);
+                placed.Init(PlaceableSo, EdgeNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
 

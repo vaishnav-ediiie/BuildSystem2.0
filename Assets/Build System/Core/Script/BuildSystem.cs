@@ -214,6 +214,7 @@ namespace CustomBuildSystem
             if (createPhotonHandler)
             {
                 BuildSystemPhotonHandler photonHandler = new GameObject("BuildSystemPhotonHandler").AddComponent<BuildSystemPhotonHandler>();
+                photonHandler.transform.parent = buildSystem.transform;
                 photonHandler.buildSystem = buildSystem;
             }
 
@@ -241,6 +242,7 @@ namespace CustomBuildSystem
         {
             BuildSystem system = Setup(player, playerCamera, probLayer, lastCellNumber, cellSize, anchorPosition, floorGap, createPhotonHandler);
             BuildSystemVisuals visuals = new GameObject("BuildSystemVisuals").AddComponent<BuildSystemVisuals>();
+            visuals.transform.parent = system.transform;
             visuals.Setup(system, cellVisuals, edgeVisuals, displayCellNumber);
             return system;
         }

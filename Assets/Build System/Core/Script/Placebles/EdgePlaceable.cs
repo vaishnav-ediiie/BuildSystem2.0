@@ -7,22 +7,24 @@ namespace CustomBuildSystem
 {
     public class EdgePlaceable : IMonoPlaceable
     {
-        [NonSerialized] public EdgePlaceableSO Scriptable;
-        [NonSerialized] public EdgeNumber Number;
-        [NonSerialized] public int Rotation;
+        public EdgePlaceableSO Scriptable { get; private set; }
+        public EdgeNumber Number { get; private set; }
+        public int Rotation { get; private set; }
+        public int Floor { get; private set; }
         [NonSerialized] public List<EdgeDecorator> Decorators;
 
-        public void Init(EdgePlaceableSO scriptable, EdgeNumber number, int rotation, LayerMask layer)
+        public void Init(EdgePlaceableSO scriptable, EdgeNumber number, int rotation, int floorNumber, LayerMask layer)
         {
             this.Scriptable = scriptable;
             this.Number = number;
             this.Rotation = rotation;
+            this.Floor = floorNumber;
             this.Decorators = new List<EdgeDecorator>();
             this.gameObject.SetLayerRecursive(layer.GetLayer());
         }
 
         public override GameObject GetDeletePrefab() => Scriptable.placingError;
-        
+
         public override void Occupy(BuildSystem buildSystem)
         {
             foreach (EdgeNumber edgeNumber in Scriptable.LoopAllEdges(Number))
@@ -38,9 +40,10 @@ namespace CustomBuildSystem
                 buildSystem.gridCurrent.EmptyEdge(edgeNumber);
             }
         }
-        
-        public override int GetScriptableID() => Scriptable.ID;
-        
+
+        public override int ScriptableID => Scriptable.ID;
+        public override int FloorNumber => this.Floor;
+
         public override bool HasDecorator(PlaceableSOBase scriptable)
         {
             foreach (EdgeDecorator decorator in Decorators)
@@ -50,7 +53,7 @@ namespace CustomBuildSystem
 
             return false;
         }
-        
+
         public override IEnumerable<IMonoPlaceable> Children
         {
             get
@@ -61,7 +64,7 @@ namespace CustomBuildSystem
                 }
             }
         }
-        
+
         public void RemoveDecorator(EdgeDecorator deco)
         {
             if (Decorators.Contains(deco))
@@ -74,7 +77,7 @@ namespace CustomBuildSystem
                 this.Decorators.Add(deco);
         }
 
-        
+
         [Serializable]
         public class Serializer
         {
@@ -83,9 +86,10 @@ namespace CustomBuildSystem
             public int column;
             public int edgyType;
             public int rotation;
+            public int floorNumber;
             public DecoSer[] decorators;
 
-            public EdgeType EdgyType => (EdgeType) edgyType;
+            public EdgeType EdgyType => (EdgeType)edgyType;
 
             public Serializer()
             {
@@ -98,6 +102,7 @@ namespace CustomBuildSystem
                 this.column = source.Number.CellAfter.column;
                 this.edgyType = (int)source.Number.edgeType;
                 this.rotation = source.Rotation;
+                this.floorNumber = source.Floor;
                 decorators = new DecoSer[source.Decorators.Count];
                 int i = 0;
                 foreach (EdgeDecorator deco in source.Decorators)
@@ -113,10 +118,11 @@ namespace CustomBuildSystem
                 Vector3 position = buildSystem.gridCurrent.EdgeNumberToPosition(cellNumber);
                 Quaternion rotation = Quaternion.Euler(0, serializer.rotation, 0);
                 EdgePlaceableSO placeableSo = buildSystem.Brain.AllPlaceableData[serializer.scriptableID] as EdgePlaceableSO;
-                EdgePlaceable parent = Instantiate(placeableSo.placed, position, rotation).AddComponent<EdgePlaceable>();
-                parent.Init(placeableSo, cellNumber, serializer.rotation, buildSystem.ProbsLayer);
-                parent.Occupy(buildSystem);
                 
+                EdgePlaceable parent = Instantiate(placeableSo.placed, position, rotation).AddComponent<EdgePlaceable>();
+                parent.Init(placeableSo, cellNumber, serializer.rotation, serializer.floorNumber, buildSystem.ProbsLayer);
+                parent.Occupy(buildSystem);
+
                 foreach (DecoSer decoSer in serializer.decorators)
                 {
                     Quaternion decoRot = Quaternion.Euler(0, decoSer.rotation, 0);
@@ -125,11 +131,11 @@ namespace CustomBuildSystem
                     decoPlaced.Init(decoSO, parent, decoSer.rotation, buildSystem.ProbsLayer);
                     decoPlaced.Occupy(buildSystem);
                 }
-                
+
                 return parent;
             }
         }
-        
+
         [Serializable]
         public class DecoSer
         {

@@ -46,7 +46,7 @@ namespace CustomBuildSystem
                     layerMask: BuildSystem.ProbsLayer))
             {
                 IMonoPlaceable comp = hitInfo.collider.GetComponentInParent<IMonoPlaceable>();
-                if (comp != null && comp != Target)
+                if (comp != null && comp != Target && comp.FloorNumber == BuildSystem.CurrentFloor)
                 {
                     SwitchActive(comp);
                 }

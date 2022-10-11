@@ -7,33 +7,35 @@ namespace CustomBuildSystem
 {
     public class CellPlaceable : IMonoPlaceable
     {
-        [NonSerialized] public CellPlaceableSO Scriptable;
-        [NonSerialized] public CellNumber Number;
-        [NonSerialized] public int Rotation;
+        public CellPlaceableSO Scriptable { get; private set; }
+        public CellNumber Number { get; private set; }
+        public int Rotation { get; private set; }
+        public int Floor { get; private set; }
         [NonSerialized] public List<CellDecorator> Decorators;
 
-        public void Init(CellPlaceableSO scriptable, CellNumber number, int rotation, LayerMask layer)
+        public void Init(CellPlaceableSO scriptable, CellNumber number, int rotation, int floorNumber, LayerMask layer)
         {
             this.Scriptable = scriptable;
             this.Number = number;
             this.Rotation = rotation;
             this.Decorators = new List<CellDecorator>();
+            this.Floor = floorNumber;
             this.gameObject.SetLayerRecursive(layer.GetLayer());
         }
-        
+
         public override GameObject GetDeletePrefab() => Scriptable.placingError;
-        
+
         public override void Occupy(BuildSystem buildSystem)
         {
             CellLayoutInfo layoutInfo = Scriptable.LayoutInfo(Number, Rotation);
-            
+
             if (layoutInfo.IsSingleCelled)
             {
                 buildSystem.gridCurrent.OccupyCell(Number, this);
                 return;
             }
 
-            foreach (CellNumber number in CellNumber.LoopCells(layoutInfo.BottomLeft, layoutInfo.TopRight+1))
+            foreach (CellNumber number in CellNumber.LoopCells(layoutInfo.BottomLeft, layoutInfo.TopRight + 1))
             {
                 buildSystem.gridCurrent.OccupyCell(number, this);
             }
@@ -52,8 +54,8 @@ namespace CustomBuildSystem
             {
                 Destroy(decorator.gameObject);
             }
-            
-            foreach (CellNumber cellNumber in CellNumber.LoopCells(layoutInfo.BottomLeft, layoutInfo.TopRight+1))
+
+            foreach (CellNumber cellNumber in CellNumber.LoopCells(layoutInfo.BottomLeft, layoutInfo.TopRight + 1))
             {
                 buildSystem.gridCurrent.EmptyCell(cellNumber);
             }
@@ -65,10 +67,12 @@ namespace CustomBuildSystem
             {
                 if (decorator.Scriptable == scriptable) return true;
             }
+
             return false;
         }
 
-        public override int GetScriptableID() => Scriptable.ID;
+        public override int ScriptableID => Scriptable.ID;
+        public override int FloorNumber => Floor;
 
         public void RemoveDecorator(CellDecorator deco)
         {
@@ -84,7 +88,7 @@ namespace CustomBuildSystem
                 this.Decorators.Add(deco);
         }
 
-        
+
         public override IEnumerable<IMonoPlaceable> Children
         {
             get
@@ -103,19 +107,20 @@ namespace CustomBuildSystem
             public int row;
             public int column;
             public int rotation;
+            public int floorNumber;
             public DecoSer[] decorators;
 
             public Serializer()
             {
-                
             }
-            
+
             public Serializer(CellPlaceable source)
             {
                 this.scriptableID = source.Scriptable.ID;
                 this.row = source.Number.row;
                 this.column = source.Number.column;
                 this.rotation = source.Rotation;
+                this.floorNumber = source.Floor;
                 decorators = new DecoSer[source.Decorators.Count];
                 int i = 0;
                 foreach (CellDecorator deco in source.Decorators)
@@ -130,19 +135,21 @@ namespace CustomBuildSystem
                 CellPlaceableSO placeableSo = buildSystem.Brain.AllPlaceableData[serializer.scriptableID] as CellPlaceableSO;
                 if (placeableSo == null)
                 {
-                    foreach (KeyValuePair<int,PlaceableSOBase> placeableSoBase in buildSystem.Brain.AllPlaceableData)
+                    foreach (KeyValuePair<int, PlaceableSOBase> placeableSoBase in buildSystem.Brain.AllPlaceableData)
                     {
                         Debug.Log($" We Have: {placeableSoBase.Key} as {placeableSoBase.Value.GetType()}");
                     }
+
                     Debug.Log($"Not found with id: {serializer.scriptableID} as CellPlaceableSO");
                 }
+
                 CellNumber cellNumber = new CellNumber(serializer.row, serializer.column);
                 Vector3 position = buildSystem.gridCurrent.CellNumberToPosition(cellNumber);
                 Quaternion rotation = Quaternion.Euler(0, serializer.rotation, 0);
                 CellPlaceable parent = Instantiate(placeableSo.placed, position, rotation).AddComponent<CellPlaceable>();
-                parent.Init(placeableSo, cellNumber, serializer.rotation, buildSystem.ProbsLayer);
+                parent.Init(placeableSo, cellNumber, serializer.rotation, serializer.floorNumber, buildSystem.ProbsLayer);
                 parent.Occupy(buildSystem);
-                
+
                 foreach (DecoSer decoSer in serializer.decorators)
                 {
                     CellPlaceableSO decoSO = buildSystem.Brain.AllPlaceableData[decoSer.scriptableID] as CellPlaceableSO;
@@ -150,13 +157,12 @@ namespace CustomBuildSystem
                     CellDecorator decoPlaced = Instantiate(decoSO.placed, position, decoRot).AddComponent<CellDecorator>();
                     decoPlaced.Init(decoSO, parent, decoSer.rotation, buildSystem.ProbsLayer);
                     decoPlaced.Occupy(buildSystem);
-
                 }
-                
+
                 return parent;
             }
         }
-        
+
         [Serializable]
         public class DecoSer
         {
