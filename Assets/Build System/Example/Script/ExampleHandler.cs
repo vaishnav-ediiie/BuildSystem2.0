@@ -15,6 +15,7 @@ namespace CustomBuildSystem.Example
         [SerializeField] private KeyCode quitKeyCode;
         [SerializeField] protected SelectItemPopup selectionPopup;
         [SerializeField] internal PlaceableSOBase[] allPlaceable;
+        [SerializeField] private Transform Cursor3D;
 
         private void Start()
         {
@@ -33,14 +34,13 @@ namespace CustomBuildSystem.Example
             }
             if (buildSystem == null)
             {
-                Debug.Log("Creating Build System");
                 buildSystem = BuildSystem.Setup(
                     player: player,
                     playerCamera: playerCam,
                     probLayer: LayerMask.GetMask("Probes"),
                     lastCellNumber: new CellNumber(10, 8),
                     cellSize: new Vector2(2, 2),
-                    anchorPosition: Vector3.zero,
+                    anchorPosition: transform.position,
                     floorGap: 2,
                     cellVisuals: cellVisuals,
                     edgeVisuals: null,
@@ -56,12 +56,12 @@ namespace CustomBuildSystem.Example
 
         private void OnEdgeStateChanged(BSS_PlacingEdge placeable, PlacingState newState)
         {
-            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.PlaceableSo);
+            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.Scriptable);
         }
 
         private void OnCellStateChanged(BSS_PlacingCell placeable, PlacingState newState)
         {
-            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.PlaceableSo);
+            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.Scriptable);
         }
 
         private void Update()

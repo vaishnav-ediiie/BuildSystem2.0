@@ -10,15 +10,17 @@ namespace CustomBuildSystem
         [SerializeField] private EdgeVisuals edgeObject;
         [SerializeField] private bool displayEdges;
         [SerializeField] private bool displayCellNumbers;
+        [SerializeField] private bool scaleVisualsByCellSize;
 
 
-        internal void Setup(BuildSystem buildSystem, CellVisuals cellObject, EdgeVisuals edgeObject, bool displayCellNumbers)
+        internal void Setup(BuildSystem buildSystem, CellVisuals cellObject, EdgeVisuals edgeObject, bool displayCellNumbers, bool scaleVisualsByCellSize)
         {
             this.buildSystem = buildSystem;
             this.cellObject = cellObject;
             this.edgeObject = edgeObject;
             this.displayEdges = (edgeObject != null);
             this.displayCellNumbers = displayCellNumbers;
+            this.scaleVisualsByCellSize = scaleVisualsByCellSize;
             buildSystem.Brain.OnGridUpdated += UpdateVisuals;
         }
 
@@ -38,7 +40,9 @@ namespace CustomBuildSystem
 
             foreach (CellNumber cellNumber in CellNumber.LoopCells(CellNumber.Zero, simpleGrid.LastCellNumber))
             {
-                Instantiate(cellObject, simpleGrid.CellNumberToPosition(cellNumber), Quaternion.identity, transform).Init(cellNumber, displayCellNumbers);
+                CellVisuals cellVisuals = Instantiate(cellObject, simpleGrid.CellNumberToPosition(cellNumber), Quaternion.identity, transform);
+                if (scaleVisualsByCellSize) cellVisuals.Init(cellNumber, displayCellNumbers, simpleGrid.CellSize);
+                else cellVisuals.Init(cellNumber, displayCellNumbers);
                 if (displayEdges)
                 {
                     Instantiate(edgeObject, simpleGrid.EdgeNumberToPosition(new EdgeNumber(cellNumber, EdgeType.Horizontal)), Quaternion.identity, transform).Init($"{cellNumber} Horizontal", true, displayCellNumbers);

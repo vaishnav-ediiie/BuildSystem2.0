@@ -10,13 +10,9 @@ namespace CustomBuildSystem
         [SerializeField] internal GameObject placingError;
         [SerializeField] internal GameObject placed;
         [SerializeField] internal Sprite Icon;
+        [SerializeField] internal bool scaleToCellSize;
         [SerializeField] internal bool isDecorator = false;
         [SerializeField, DrawIfBool("isDecorator", true)] internal bool parentRelativeRotation = false;
         [SerializeField, DrawIfBool("isDecorator", true)] internal int rotationOffset = 0;
     }
 }
-
-
-#if UNITY_EDITOR
-
-#endif

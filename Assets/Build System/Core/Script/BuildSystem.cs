@@ -33,6 +33,9 @@ namespace CustomBuildSystem
 
         [SerializeField, Tooltip("The differance in Y-coordinate of any two floors")]
         private float floorGap = 2f;
+        
+        [SerializeField, Tooltip("Maximum distance (in Cells) between player's current cell and the cell that player can place on")]
+        internal int playerFOV = 1;
 
         private BuiltSystemState currentState;
         private Dictionary<int, DuoPlaceGrid<CellPlaceable, EdgePlaceable>> allGrids;
@@ -41,7 +44,6 @@ namespace CustomBuildSystem
         internal DuoPlaceGrid<CellPlaceable, EdgePlaceable> gridAbove;
 
         public BuildSystemBrain Brain { get; private set; }
-
         public DuoPlaceGrid<CellPlaceable, EdgePlaceable> GridCurrent => gridCurrent;
         public Transform Player => player;
         public Camera PlayerCamera => playerCamera;
@@ -116,7 +118,8 @@ namespace CustomBuildSystem
             }
             else
             {
-                gridCurrent = new DuoPlaceGrid<CellPlaceable, EdgePlaceable>(lastCellNumber, cellSize, new Vector2(anchorPosition.x, anchorPosition.z), (floor * floorGap) + anchorPosition.y);
+                float ypos = (floor * floorGap) + anchorPosition.y;
+                gridCurrent = new DuoPlaceGrid<CellPlaceable, EdgePlaceable>(lastCellNumber, cellSize, new Vector2(anchorPosition.x, anchorPosition.z), ypos);
                 allGrids.Add(floor, gridCurrent);
             }
 
@@ -149,7 +152,7 @@ namespace CustomBuildSystem
             if (cellPlaceableSo.isDecorator) SwitchState<BSS_PlacingCellDecorator>().Setup(cellPlaceableSo);
             else                             SwitchState<BSS_PlacingCell>().Setup(cellPlaceableSo);
         }
-
+        
         public void ConfirmBuild()
         {
             Type activeType = currentState.GetType();
@@ -167,7 +170,9 @@ namespace CustomBuildSystem
         public void CancelBuild(bool switchToIdle)
         {
             Type activeType = currentState.GetType();
-            if (activeType == typeof(BSS_PlacingCell)) ((BSS_PlacingCell)currentState).CancelPlacement();
+            if (activeType == typeof(BSS_PlacingCellDecorator)) ((BSS_PlacingCellDecorator)currentState).CancelPlacement();
+            else if (activeType == typeof(BSS_PlacingEdgeDecorator)) ((BSS_PlacingEdgeDecorator)currentState).CancelPlacement();
+            else if (activeType == typeof(BSS_PlacingCell)) ((BSS_PlacingCell)currentState).CancelPlacement();
             else if (activeType == typeof(BSS_PlacingEdge)) ((BSS_PlacingEdge)currentState).CancelPlacement();
             else if (switchToIdle && activeType != typeof(BSS_Idle))
             {
@@ -177,18 +182,34 @@ namespace CustomBuildSystem
 
         public string Serialize()
         {
-            return gridCurrent.SerializeWithOccupants(
-                cellOccupantSerializer: cellPlaceable => JsonConvert.SerializeObject(new CellPlaceable.Serializer(cellPlaceable)),
-                edgeOccupantSerializer: edgePlaceable => JsonConvert.SerializeObject(new EdgePlaceable.Serializer(edgePlaceable))
-            );
+            Dictionary<int, string> allFloorsData = new Dictionary<int, string>();
+            foreach (KeyValuePair<int,DuoPlaceGrid<CellPlaceable,EdgePlaceable>> duoPlaceGrid in allGrids)
+            {
+                string data = duoPlaceGrid.Value.SerializeWithOccupants(
+                    cellOccupantSerializer: cellPlaceable => JsonConvert.SerializeObject(new CellPlaceable.Serializer(cellPlaceable)),
+                    edgeOccupantSerializer: edgePlaceable => JsonConvert.SerializeObject(new EdgePlaceable.Serializer(edgePlaceable))
+                );
+                
+                allFloorsData.Add(duoPlaceGrid.Key, data);
+            }
+
+            return JsonConvert.SerializeObject(allFloorsData);
         }
 
         public void Deserialize(string data)
         {
-            gridCurrent.DeserializeWithOccupants(data,
-                cellOccupantDeserializer: cellData => CellPlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<CellPlaceable.Serializer>(cellData), this),
-                edgeOccupantDeserializer: edgeData => EdgePlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<EdgePlaceable.Serializer>(edgeData), this)
-            );
+            Dictionary<int, string> allFloorsData = JsonConvert.DeserializeObject<Dictionary<int, string>>(data);
+            allGrids = new Dictionary<int, DuoPlaceGrid<CellPlaceable, EdgePlaceable>>();
+
+            foreach (KeyValuePair<int,string> floorInfo in allFloorsData)
+            {
+                gridCurrent = new DuoPlaceGrid<CellPlaceable, EdgePlaceable>();
+                gridCurrent.DeserializeWithOccupants(floorInfo.Value,
+                    cellOccupantDeserializer: cellData => CellPlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<CellPlaceable.Serializer>(cellData), this),
+                    edgeOccupantDeserializer: edgeData => EdgePlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<EdgePlaceable.Serializer>(edgeData), this)
+                );
+                allGrids.Add(floorInfo.Key, gridCurrent);
+            }
         }
 
        
@@ -238,12 +259,14 @@ namespace CustomBuildSystem
             CellVisuals cellVisuals,
             EdgeVisuals edgeVisuals = null,
             bool displayCellNumber = false,
-            bool createPhotonHandler = false)
+            bool createPhotonHandler = false,
+            bool scaleVisualsByCellSize = true
+            )
         {
             BuildSystem system = Setup(player, playerCamera, probLayer, lastCellNumber, cellSize, anchorPosition, floorGap, createPhotonHandler);
             BuildSystemVisuals visuals = new GameObject("BuildSystemVisuals").AddComponent<BuildSystemVisuals>();
             visuals.transform.parent = system.transform;
-            visuals.Setup(system, cellVisuals, edgeVisuals, displayCellNumber);
+            visuals.Setup(system, cellVisuals, edgeVisuals, displayCellNumber, scaleVisualsByCellSize);
             return system;
         }
     }

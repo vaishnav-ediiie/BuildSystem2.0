@@ -59,7 +59,7 @@ namespace CustomGridSystem
         }
 
         public override bool Equals(object obj) => obj is CellNumber other && Equals(other);
-        public override int GetHashCode() => $"{row}{column}".GetHashCode();
+        public override int GetHashCode() => ToString().GetHashCode();
         public override string ToString() => $"[{row}, {column}]";
 
 
@@ -98,7 +98,7 @@ namespace CustomGridSystem
         public static CellNumber operator -(CellNumber a, int b) => new CellNumber(a.row - b, a.column - b);
         public static CellNumber operator *(CellNumber a, int b) => new CellNumber(a.row * b, a.column * b);
         
-        public static implicit operator string(CellNumber cellNumber) => $"[{cellNumber.row}, {cellNumber.column}]";
+        public static implicit operator string(CellNumber cellNumber) => cellNumber.ToString();
 
         public static CellNumber operator -(CellNumber a) => new CellNumber(-a.row, -a.column);
 

@@ -15,7 +15,7 @@ namespace CustomGridSystem
         private Dictionary<string, TEdgeOccupant> allEdgeOccupants;
 
         #region Constructors
-        public DuoPlaceGrid()
+        public DuoPlaceGrid() : base()
         {
             allCellOccupants = new Dictionary<string, TCellOccupant>();
             allEdgeOccupants = new Dictionary<string, TEdgeOccupant>();

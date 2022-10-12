@@ -35,9 +35,9 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current CellNumber = <c>placeable.CellNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.PlaceableSo</c></para>
+        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
         /// <para>if you want to check base conditions (set in inspector) call</para>
-        /// <c> placeable.PlaceableSo.AreBaseConditionSatisfied(placeable)</c>
+        /// <c> placeable.Scriptable.AreBaseConditionSatisfied(placeable)</c>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>+1 to rotate object by 90 degrees, -1 to rotate object by -90 degrees, 0 to not rotate</returns>
@@ -52,16 +52,16 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current CellNumber = <c>placeable.CellNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.PlaceableSo</c></para>
+        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
         /// <para>if you want to check base conditions (set in inspector) call
-        /// <c> placeable.PlaceableSo.AreBaseConditionSatisfied(placeable)</c>
+        /// <c> placeable.Scriptable.AreBaseConditionSatisfied(placeable)</c>
         /// </para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>Return +1 to rotate object by 90 degrees, -1 to rotate object by -90 degrees , 0 to not rotate</returns>
         public virtual bool ValidateCellPlacement(BSS_PlacingCell placeable)
         {
-            return placeable.PlaceableSo.AreBaseConditionsSatisfied(placeable);
+            return placeable.Scriptable.AreBaseConditionsSatisfied(placeable);
         }
         
         /// <summary>
@@ -70,9 +70,9 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current CellNumber = <c>placeable.CellNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.PlaceableSo</c></para>
+        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
         /// <para>if you want to check base conditions (set in inspector) call</para>
-        /// <c> placeable.PlaceableSo.AreBaseConditionSatisfied(placeable)</c>
+        /// <c> placeable.Scriptable.AreBaseConditionSatisfied(placeable)</c>
         /// </remarks>
         /// <param name="placeable">Scriptable that we are placing</param>
         /// <returns>true when you want to confirm placement, false otherwise</returns>
@@ -87,7 +87,7 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current EdgeNumber = <c>placeable.EdgeNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.PlaceableSo</c></para>
+        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>true when you want to rotate object by 180 degrees, false otherwise</returns>
@@ -103,7 +103,7 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current EdgeNumber = <c>placeable.EdgeNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.PlaceableSo</c></para>
+        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>true when you want to confirm placement, false otherwise</returns>
@@ -118,22 +118,22 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current EdgeNumber = <c>placeable.EdgeNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.PlaceableSo</c></para>
+        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
         /// <para>if you want to check base conditions (set in inspector) call
-        /// <c> placeable.PlaceableSo.AreBaseConditionSatisfied(placeable)</c>
+        /// <c> placeable.Scriptable.AreBaseConditionSatisfied(placeable)</c>
         /// </para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>Return true if you want to show placing Okay, false if you want to show placing Error</returns>
         public virtual bool ValidateEdgePlacement(BSS_PlacingEdge placeable)
         {
-            return placeable.PlaceableSo.AreBaseConditionsSatisfied(placeable);
-            /*if (placeable.PlaceableSo.cellsCount <= 1)
+            return placeable.Scriptable.AreBaseConditionsSatisfied(placeable);
+            /*if (placeable.Scriptable.cellsCount <= 1)
             {
-                if (placeable.PlaceableSo.isDecorator)
+                if (placeable.Scriptable.isDecorator)
                 {
                     EdgePlaceable parent = placeable.BuildSystem.gridCurrent.GetEdgeOccupant(placeable.EdgeNumber, null);
-                    return parent != null && !parent.HasDecorator(placeable.PlaceableSo) ;
+                    return parent != null && !parent.HasDecorator(placeable.Scriptable) ;
                 } 
                 return ! placeable.BuildSystem.gridCurrent.IsEdgeOccupied(placeable.EdgeNumber);
             }
@@ -143,19 +143,19 @@ namespace CustomBuildSystem
             EdgeNumber first;
             if (isHorz)
             {
-                int startRow = placeable.EdgeNumber.CellAfter.row - placeable.PlaceableSo.centerCellIndex;
+                int startRow = placeable.EdgeNumber.CellAfter.row - placeable.Scriptable.centerCellIndex;
                 first = new EdgeNumber(startRow, placeable.EdgeNumber.CellAfter.column, placeable.EdgeNumber.edgeType);
             }
             else
             {
-                int startCol = placeable.EdgeNumber.CellAfter.column - placeable.PlaceableSo.centerCellIndex;
+                int startCol = placeable.EdgeNumber.CellAfter.column - placeable.Scriptable.centerCellIndex;
                 first = new EdgeNumber(placeable.EdgeNumber.CellAfter.row, startCol, placeable.EdgeNumber.edgeType);
             }
 
             CellNumber current = new CellNumber(0, 0);
-            bool check = !placeable.PlaceableSo.isDecorator;
+            bool check = !placeable.Scriptable.isDecorator;
 
-            for (int _ = 0; _ < placeable.PlaceableSo.cellsCount; _++)
+            for (int _ = 0; _ < placeable.Scriptable.cellsCount; _++)
             {
                 EdgeNumber en = first + current;
                 bool isNumberValid = placeable.BuildSystem.gridCurrent.IsEdgeNumberValid(en);

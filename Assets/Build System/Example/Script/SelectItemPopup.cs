@@ -16,7 +16,12 @@ public class SelectItemPopup : MonoBehaviour
     {
         this.onCompleteAction = onCompleteAction;
         radialMenu.elements = new List<RMF_RadialMenuElement>();
-
+        
+        RectTransform rectTransform = GetComponent<RectTransform>();
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform.parent.GetComponent<RectTransform>(), Input.mousePosition, Camera.current, out Vector2 localPoint))
+        {
+            rectTransform.anchoredPosition = localPoint;
+        }
         
         this.placeables = placeables;
         int i = 0;

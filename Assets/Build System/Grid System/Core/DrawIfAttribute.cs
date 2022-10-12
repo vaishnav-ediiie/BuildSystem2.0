@@ -44,7 +44,7 @@ public class DrawIfPropertyDrawer : PropertyDrawer
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         GUI.enabled = ShowMe(property);
-        EditorGUI.PropertyField(position, property, new GUIContent(property.displayName));
+        EditorGUI.PropertyField(position, property, label, true);
         GUI.enabled = true;
     }
 }

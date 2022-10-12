@@ -1,16 +1,19 @@
 using UnityEngine;
 using Photon.Pun;
 
-public class ConnectToPhoton : MonoBehaviourPunCallbacks
+namespace CustomBuildSystem
 {
-    public void Start()
+    public class ConnectToPhoton : MonoBehaviourPunCallbacks
     {
-        PhotonNetwork.ConnectUsingSettings();
-    }
+        public void Start()
+        {
+            PhotonNetwork.ConnectUsingSettings();
+        }
 
-    public override void OnConnectedToMaster()
-    {
-        Debug.Log("Connected");
-        PhotonNetwork.LoadLevel(1);
+        public override void OnConnectedToMaster()
+        {
+            Debug.Log("Connected");
+            PhotonNetwork.LoadLevel(1);
+        }
     }
 }

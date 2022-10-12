@@ -51,12 +51,7 @@ namespace CustomGridSystem
             this.gridType = new GridTypeFinite(lastCellNumber);
         }
 
-        public CellNumber CellPositionToNumberRaw(Vector3 position)
-        {
-            float col = (position.x - AnchorPosition.x) / CellSize.x;
-            float row = (position.z - AnchorPosition.y) / CellSize.y;
-            return new CellNumber(Mathf.RoundToInt(row), Mathf.RoundToInt(col));
-        }
+        public CellNumber CellPositionToNumberRaw(Vector3 position) => new CellNumber(Mathf.RoundToInt((position.z - AnchorPosition.y) / CellSize.y), Mathf.RoundToInt((position.x - AnchorPosition.x) / CellSize.x));
 
         public CellNumber AdjacentCellToRaw(CellNumber referenceCell, Direction direction)
         {
@@ -198,6 +193,18 @@ namespace CustomGridSystem
             this.OnGridMoved?.Invoke(delta);
         }
 
+        public Vector3 RayCastToPoint(Ray ray)
+        {
+            Vector3 orig = ray.origin;
+            Vector3 dire = orig + ray.direction;
+            float fact = (GridYPos - dire.y) / (dire.y - orig.y);
+            float x = fact * (dire.x - orig.x);
+            float z = fact * (dire.z - orig.z);
+            Vector3 point = new Vector3(x + dire.x, GridYPos, z + dire.z);             
+            return point;
+        }
+        
+        public CellNumber RayCastToCellNumber(Ray ray) => CellPositionToNumber(RayCastToPoint(ray));
         public bool IsCellNumberValid(CellNumber cellNumber) => gridType.IsCellNumberValid(cellNumber);
         public bool IsEdgeNumberValid(EdgeNumber edgeNumber) => gridType.IsEdgeNumberValid(edgeNumber);
         public CellNumber ValidateCellNumber(CellNumber cellNumber) => gridType.ValidateCellNumber(cellNumber);

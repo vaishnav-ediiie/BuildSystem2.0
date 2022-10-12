@@ -19,7 +19,7 @@ namespace CustomBuildSystem
         
         public bool AreSatisfied(BuildSystem buildSystem, BSS_PlacingEdge placingEdge)
         {
-            if (placingEdge.PlaceableSo.cellsCount <= 1) return StatsForSingleCell(buildSystem, placingEdge.EdgeNumber);
+            if (placingEdge.Scriptable.cellsCount <= 1) return StatsForSingleCell(buildSystem, placingEdge.EdgeNumber);
             return StatsForMultiCell(buildSystem, placingEdge);
         }
 
@@ -45,7 +45,7 @@ namespace CustomBuildSystem
         {
             if (condition.conditionType == ConditionType.DontCare) return false;
 
-            foreach (EdgeNumber edgeNumber in placingEdge.PlaceableSo.LoopAllEdges(placingEdge.EdgeNumber))
+            foreach (EdgeNumber edgeNumber in placingEdge.Scriptable.LoopAllEdges(placingEdge.EdgeNumber))
             {
                 if (condition.HasViolated(grid, edgeNumber)) return true;
             }

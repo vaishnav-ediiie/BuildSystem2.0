@@ -5,16 +5,15 @@ namespace CustomBuildSystem
 {
     public class BSS_PlacingEdge : BSS_Placing
     {
-        public EdgePlaceableSO PlaceableSo { get; private set; }
+        public EdgePlaceableSO Scriptable { get; private set; }
         private Vector2 screenCenter;
         public EdgeNumber EdgeNumber { get; private set; }
-        protected override PlaceableSOBase PlaceableSoBase => PlaceableSo;
+        protected override PlaceableSOBase PlaceableSoBase => Scriptable;
 
         protected bool needRemark;
 
         private void Mark(bool cp, bool force = false)
         {
-            Debug.Log($"Remarking to: {cp}, force: {force}");
             needRemark = false;
             if (cp == CanPlace && force == false) return;
 
@@ -32,19 +31,19 @@ namespace CustomBuildSystem
 
         internal void ConfirmPlacement()
         {
-            if (PlaceableSo.isDecorator)
+            if (Scriptable.isDecorator)
             {
                 EdgePlaceable parent = BuildSystem.gridCurrent.GetEdgeOccupant(EdgeNumber, null);
                 if (parent == null) return;
-
-                EdgeDecorator placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<EdgeDecorator>();
-                placed.Init(PlaceableSo, parent, Rotation, BuildSystem.ProbsLayer);
+                
+                EdgeDecorator placed = ReplaceActiveModel(Scriptable.placed, nullCurrentSpawned: true).AddComponent<EdgeDecorator>();
+                placed.Init(Scriptable, parent, Rotation, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
             else
             {
-                EdgePlaceable placed = ReplaceActiveModel(PlaceableSo.placed, nullCurrentSpawned: true).AddComponent<EdgePlaceable>();
-                placed.Init(PlaceableSo, EdgeNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
+                EdgePlaceable placed = ReplaceActiveModel(Scriptable.placed, nullCurrentSpawned: true).AddComponent<EdgePlaceable>();
+                placed.Init(Scriptable, EdgeNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
 
@@ -54,6 +53,7 @@ namespace CustomBuildSystem
 
         internal void CancelPlacement()
         {
+            Debug.Log($"Cancel Build: {CurrentSpawned}");
             CanPlace = false;
             Object.Destroy(CurrentSpawned);
             BuildSystem.SwitchState<BSS_Idle>();
@@ -62,8 +62,8 @@ namespace CustomBuildSystem
         internal virtual void Setup(EdgePlaceableSO placeable)
         {
             screenCenter = new Vector2(Screen.width, Screen.height) / 2f;
-            this.PlaceableSo = placeable;
-            CurrentSpawned = Object.Instantiate(placeable.placingOkay);
+            this.Scriptable = placeable;
+            CurrentSpawned = Object.Instantiate(placeable.placingOkay, BuildSystem.transform);
             Rotation = 0;
 
             EdgeNumber = GetReferenceEdge(screenCenter);

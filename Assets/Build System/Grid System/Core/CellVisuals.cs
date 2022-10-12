@@ -19,5 +19,11 @@ namespace CustomGridSystem
                 textMesh.enabled = false;
             }
         }
+
+        public void Init(CellNumber cellNumber, bool displayNumber, Vector2 scale)
+        {
+            Init(cellNumber, displayNumber);
+            transform.localScale = new Vector3(scale.x, transform.localScale.y, scale.y);
+        }
     }
 }

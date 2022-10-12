@@ -34,7 +34,7 @@ namespace CustomBuildSystem.PhotonIntegration
             string itemID = GetNameFor(TempClass.GetActivePlotID(), placingEdge.EdgeNumber.ToString());
 
             photonView.RPC(nameof(RPC_OnItemSpawned), RpcTarget.OthersBuffered,
-                placingEdge.PlaceableSo.ID, itemID, position, placingEdge.Rotation);
+                placingEdge.Scriptable.ID, itemID, position, placingEdge.Rotation);
         }
 
         private void OnCellStateChanged(BSS_PlacingCell placingCell, PlacingState newState)
@@ -44,7 +44,7 @@ namespace CustomBuildSystem.PhotonIntegration
             string itemID = GetNameFor(TempClass.GetActivePlotID(), placingCell.CellNumber.ToString());
 
             photonView.RPC(nameof(RPC_OnItemSpawned), RpcTarget.OthersBuffered,
-                placingCell.PlaceableSo.ID, itemID, position, placingCell.Rotation);
+                placingCell.Scriptable.ID, itemID, position, placingCell.Rotation);
         }
 
         private void OnItemDeleted(IMonoPlaceable deleting)
