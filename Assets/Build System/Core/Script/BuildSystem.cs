@@ -48,6 +48,7 @@ namespace CustomBuildSystem
         public Transform Player => player;
         public Camera PlayerCamera => playerCamera;
         public int CurrentFloor { get; private set; }
+        public int CurrentFloorByPlayerPos => (int)((player.position.y - anchorPosition.y) / floorGap);
 
 
         private void Awake()
@@ -62,7 +63,7 @@ namespace CustomBuildSystem
             if (!ProbsLayer.IsSingleLayer()) Debug.LogError("ProbsLayer LayerMask contains multiple layers, make sure there's only one selected.");
             if (Brain.AllPlaceableData == null || Brain.AllPlaceableData.Count == 0) Debug.LogError("AllPlaceableData in build system brain is empty, Save & Load wont work.");
             
-            LoadFloor(0);
+            LoadFloor(CurrentFloorByPlayerPos);
             Brain.Call_GridUpdate();
             
         }
@@ -94,10 +95,9 @@ namespace CustomBuildSystem
 
         void Update()
         {
-            int floor = (int)((player.position.y - anchorPosition.y) / floorGap);
-            if (floor != CurrentFloor)
+            if (CurrentFloorByPlayerPos != CurrentFloor)
             {
-                LoadFloor(floor);
+                LoadFloor(CurrentFloorByPlayerPos);
             }
 
             if (Brain.ShouldEnterDeleteMove(currentState))
@@ -210,6 +210,7 @@ namespace CustomBuildSystem
                 );
                 allGrids.Add(floorInfo.Key, gridCurrent);
             }
+            LoadFloor(CurrentFloorByPlayerPos);
         }
 
        
