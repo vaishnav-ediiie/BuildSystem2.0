@@ -1,3 +1,4 @@
+using CustomBuildSystem.Placed;
 using CustomGridSystem;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ namespace CustomBuildSystem
     public abstract class BuiltSystemState
     {
         internal BuildSystem BuildSystem;
-        public DuoPlaceGrid<CellPlaceable, EdgePlaceable> GridCurrent => BuildSystem.gridCurrent;
+        public DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> GridCurrent => BuildSystem.gridCurrent;
         public Transform player => BuildSystem.player;
         public Camera playerCamera => BuildSystem.playerCamera;
 

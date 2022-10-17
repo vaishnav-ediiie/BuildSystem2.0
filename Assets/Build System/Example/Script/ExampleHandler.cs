@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CustomBuildSystem.Placing;
 using CustomGridSystem;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ namespace CustomBuildSystem.Example
         [SerializeField] protected Canvas canvas;
         [SerializeField] private KeyCode quitKeyCode;
         [SerializeField] protected SelectItemPopup selectionPopup;
-        [SerializeField] internal PlaceableSOBase[] allPlaceable;
+        [SerializeField] internal PlaceableMonoBase[] allPlaceable;
         [SerializeField] private Transform Cursor3D;
 
         private void Start()
@@ -22,15 +23,13 @@ namespace CustomBuildSystem.Example
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
 
-            ExampleBrain exampleBrain = new ExampleBrain
-            {
-                AllPlaceableData = new Dictionary<int, PlaceableSOBase>()
-            };
+            ExampleBrain exampleBrain = new ExampleBrain();
+            BuildSystem.AllPlaceableData = new Dictionary<int, PlaceableMonoBase>();
 
-            foreach (PlaceableSOBase soBase in allPlaceable)
+            foreach (PlaceableMonoBase soBase in allPlaceable)
             {
-                if (exampleBrain.AllPlaceableData.ContainsKey(soBase.ID)) Debug.LogError($"Multiple placeable with same ID: {soBase.name} & {exampleBrain.AllPlaceableData[soBase.ID].name}");
-                else exampleBrain.AllPlaceableData.Add(soBase.ID, soBase);
+                if (BuildSystem.AllPlaceableData.ContainsKey(soBase.ID)) Debug.LogError($"Multiple placeable with same ID: {soBase.name} & {BuildSystem.AllPlaceableData[soBase.ID].name}");
+                else BuildSystem.AllPlaceableData.Add(soBase.ID, soBase);
             }
             if (buildSystem == null)
             {
@@ -44,24 +43,23 @@ namespace CustomBuildSystem.Example
                     floorGap: 2,
                     cellVisuals: cellVisuals,
                     edgeVisuals: null,
-                    displayCellNumber: true,
-                    createPhotonHandler: false
+                    displayCellNumber: true
                 );
             }
             buildSystem.UseBrain(exampleBrain);
 
-            buildSystem.Brain.OnCellStateChanged += OnCellStateChanged;
-            buildSystem.Brain.OnEdgeStateChanged += OnEdgeStateChanged;
+            BuildEvents.OnCellStateChanged += OnCellStateChanged;
+            BuildEvents.OnEdgeStateChanged += OnEdgeStateChanged;
         }
 
         private void OnEdgeStateChanged(BSS_PlacingEdge placeable, PlacingState newState)
         {
-            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.Scriptable);
+            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.Placeable);
         }
 
         private void OnCellStateChanged(BSS_PlacingCell placeable, PlacingState newState)
         {
-            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.Scriptable);
+            if (newState == PlacingState.Placed) buildSystem.StartBuild(placeable.Placeable);
         }
 
         private void Update()
@@ -95,13 +93,13 @@ namespace CustomBuildSystem.Example
             }
         }
 
-        private void UpdatePlacingState(PlaceableSOBase placeable)
+        private void UpdatePlacingState(PlaceableMonoBase placeable)
         {
             if (placeable != null)
             {
                 Type pt = placeable.GetType();
-                if (pt == typeof(EdgePlaceableSO)) buildSystem.StartBuild((EdgePlaceableSO)placeable);
-                else if (pt == typeof(CellPlaceableSO)) buildSystem.StartBuild((CellPlaceableSO)placeable);
+                if (pt == typeof(EdgePlaceable)) buildSystem.StartBuild((EdgePlaceable)placeable);
+                else if (pt == typeof(CellPlaceable)) buildSystem.StartBuild((CellPlaceable)placeable);
             }
 
             Cursor.visible = false;

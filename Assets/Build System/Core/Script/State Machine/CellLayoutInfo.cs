@@ -6,6 +6,7 @@ namespace CustomBuildSystem
     public class CellLayoutInfo
     {
         public CellNumber LocalCenter { get; }
+        public CellNumber GlobalCenter { get; }
         public CellNumber TotalSize { get; }
         public CellNumber BottomLeft { get; }
         public CellNumber TopRight { get; }
@@ -22,7 +23,7 @@ namespace CustomBuildSystem
         {
             LocalCenter = localCenter;
             TotalSize = totalSize;
-
+            GlobalCenter = current;
 
             if (IsSingleCelled)
             {

@@ -1,10 +1,12 @@
-﻿using CustomGridSystem;
+﻿using CustomBuildSystem.Placed;
+using CustomBuildSystem.Placing;
+using CustomGridSystem;
 
 namespace CustomBuildSystem
 {
     public class BSS_PlacingCellDecorator : BSS_PlacingCell
     {
-        internal override void Setup(CellPlaceableSO placeable)
+        internal override void Setup(CellPlaceable placeable)
         {
             ConditionType current = placeable.placementCriteria.cellCenter.conditionType;
             if (current != ConditionType.OccupiedByAny && current != ConditionType.OccupiedBySpecific) 
@@ -14,19 +16,19 @@ namespace CustomBuildSystem
 
         protected override void HandleRotation()
         {
-            if (!Scriptable.parentRelativeRotation) 
+            if (!Placeable.parentRelativeRotation) 
                 base.HandleRotation();
         }
 
         protected override void UpdateVisuals(CellNumber cellNumber)
         {
             base.UpdateVisuals(cellNumber);
-            if (Scriptable.parentRelativeRotation)
+            if (Placeable.parentRelativeRotation)
             {
-                CellPlaceable placed = BuildSystem.gridCurrent.GetCellOccupant(cellNumber, null);
+                CellOccupantMono placed = BuildSystem.gridCurrent.GetCellOccupant(cellNumber, null);
                 if (placed != null)
                 {
-                    Rotation = placed.Rotation + Scriptable.rotationOffset;
+                    Rotation = placed.Rotation + Placeable.rotationOffset;
                 }
             }
 

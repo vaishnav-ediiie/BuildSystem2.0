@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace DebugToScreen
 {
-    public class Message : IGameLog
+    public class Message
     {
         private string text;
         private int linesCount;

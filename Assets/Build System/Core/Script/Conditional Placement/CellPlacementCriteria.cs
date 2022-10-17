@@ -1,6 +1,9 @@
 ﻿using System;
+using CustomBuildSystem.Placed;
 using CustomGridSystem;
+using DebugToScreen;
 using UnityEngine;
+
 
 namespace CustomBuildSystem
 {
@@ -8,25 +11,25 @@ namespace CustomBuildSystem
     public class CellPlacementCriteria
     {
         [Tooltip("Cells exactly one floor above the object")]
-        public CellCondition cellAbove;
+        private CellCondition cellAbove;
 
         [Tooltip("Cells exactly one floor below the object")]
-        public CellCondition cellBelow;
+        private CellCondition cellBelow;
 
         [Tooltip("Cells that are within the bonds of object")]
         public CellCondition cellCenter = CellCondition.CenterCondition;
 
         [Tooltip("Cells that share common edge")]
-        public CellCondition cellSide;
+        private CellCondition cellSide;
 
         [Tooltip("Cells that share same corner")]
-        public CellCondition cellCorner;
+        private CellCondition cellCorner;
 
         [Tooltip("Boundary of Object")]
-        public CellCondition edgeBoundary;
+        private CellCondition edgeBoundary;
 
         [Tooltip("Edges that are enclosed")]
-        public CellCondition edgeBetween;
+        private CellCondition edgeBetween;
         
         
         public bool AreSatisfied(BuildSystem buildSystem, CellLayoutInfo layoutInfo)
@@ -104,7 +107,7 @@ namespace CustomBuildSystem
             return true;
         }
 
-        private bool CheckSideCells(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, CellLayoutInfo layoutInfo)
+        private bool CheckSideCells(DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> grid, CellLayoutInfo layoutInfo)
         {
             if (cellSide.conditionType == ConditionType.DontCare)
             {
@@ -152,25 +155,34 @@ namespace CustomBuildSystem
             return false;
         }
 
-        private bool CheckCellsWithinBonds(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, CellCondition condition, CellLayoutInfo layoutInfo, string name)
+        private bool CheckCellsWithinBonds(DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> grid, CellCondition condition, CellLayoutInfo layoutInfo, string name)
         {
+            GameDebug.ClearInfo();
+            GameDebug.AppendLine($"WithinBonds {name}: ");
             if (condition.conditionType == ConditionType.DontCare)
             {
                 return false;
             }
 
-            foreach (CellNumber cellNumber in CellNumber.LoopCells(layoutInfo.BottomLeft, layoutInfo.TopRight + 1))
+            CellNumber bl = layoutInfo.BottomLeft;
+            CellNumber tr = layoutInfo.TopRight + 1;
+            GameDebug.AppendLine($"    Centers: {layoutInfo.LocalCenter}, {layoutInfo.GlobalCenter}");
+            GameDebug.AppendLine($"    {bl} - {tr}   ");
+            
+            foreach (CellNumber cellNumber in CellNumber.LoopCells(bl, tr))
             {
+                GameDebug.AppendLine($"        {cellNumber} (Valid: {grid.IsCellNumberValid(cellNumber)}, Occupied: {grid.IsCellOccupied(cellNumber)})");
                 if (condition.HasViolatedCell(grid, cellNumber))
                 {
+                    GameDebug.AppendText("- Violated");
                     return true;
                 }
             }
-
+            GameDebug.AppendLine("    All Okay");
             return false;
         }
 
-        private bool CheckEdgesWithin(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, CellLayoutInfo layoutInfo)
+        private bool CheckEdgesWithin(DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> grid, CellLayoutInfo layoutInfo)
         {
             if (edgeBetween.conditionType == ConditionType.DontCare) return false;
 

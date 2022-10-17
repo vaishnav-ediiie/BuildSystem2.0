@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CustomBuildSystem;
+using CustomBuildSystem.Placing;
 using UnityEngine;
 
 
@@ -9,10 +10,10 @@ public class SelectItemPopup : MonoBehaviour
     [SerializeField] private RMF_RadialMenu radialMenu;
     [SerializeField] private RMF_RadialMenuElement menuElement;
     [SerializeField] private Transform elementsParent;
-    private Action<PlaceableSOBase> onCompleteAction;
-    private PlaceableSOBase[] placeables;
+    private Action<PlaceableMonoBase> onCompleteAction;
+    private PlaceableMonoBase[] placeables;
 
-    public void Init(PlaceableSOBase[] placeables, Action<PlaceableSOBase> onCompleteAction)
+    public void Init(PlaceableMonoBase[] placeables, Action<PlaceableMonoBase> onCompleteAction)
     {
         this.onCompleteAction = onCompleteAction;
         radialMenu.elements = new List<RMF_RadialMenuElement>();
@@ -28,7 +29,7 @@ public class SelectItemPopup : MonoBehaviour
         int elementsCount = placeables.Length;
         float angleOffset = 360f / elementsCount;
         
-        foreach (PlaceableSOBase placeable in placeables)
+        foreach (PlaceableMonoBase placeable in placeables)
         {
             CreateElement(angleOffset, placeable.Icon, i);
             i++;

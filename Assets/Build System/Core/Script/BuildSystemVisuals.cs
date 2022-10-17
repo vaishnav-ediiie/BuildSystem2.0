@@ -5,33 +5,37 @@ namespace CustomBuildSystem
 {
     public class BuildSystemVisuals : MonoBehaviour
     {
-        [SerializeField] private BuildSystem buildSystem;
         [SerializeField] private CellVisuals cellObject;
         [SerializeField] private EdgeVisuals edgeObject;
         [SerializeField] private bool displayEdges;
         [SerializeField] private bool displayCellNumbers;
         [SerializeField] private bool scaleVisualsByCellSize;
+        private BuildSystem buildSystem;
 
-
-        internal void Setup(BuildSystem buildSystem, CellVisuals cellObject, EdgeVisuals edgeObject, bool displayCellNumbers, bool scaleVisualsByCellSize)
+        internal void Setup(CellVisuals cellObject, EdgeVisuals edgeObject, bool displayCellNumbers, bool scaleVisualsByCellSize)
         {
-            this.buildSystem = buildSystem;
             this.cellObject = cellObject;
             this.edgeObject = edgeObject;
             this.displayEdges = (edgeObject != null);
             this.displayCellNumbers = displayCellNumbers;
             this.scaleVisualsByCellSize = scaleVisualsByCellSize;
-            buildSystem.Brain.OnGridUpdated += UpdateVisuals;
         }
 
         private void OnEnable()
         {
-            if (buildSystem) buildSystem.Brain.OnGridUpdated += UpdateVisuals;
+            BuildEvents.OnGridUpdated += UpdateVisuals;
+            BuildEvents.OnBuildSystemCreated += AssignBuildSystem;
         }
 
         private void OnDisable()
         {
-            if (buildSystem) buildSystem.Brain.OnGridUpdated -= UpdateVisuals;
+            BuildEvents.OnGridUpdated -= UpdateVisuals;
+            BuildEvents.OnBuildSystemCreated -= AssignBuildSystem;
+        }
+
+        private void AssignBuildSystem(BuildSystem obj)
+        {
+            buildSystem = obj;
         }
 
         internal void UpdateVisuals()

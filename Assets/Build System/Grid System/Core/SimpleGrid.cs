@@ -26,7 +26,7 @@ namespace CustomGridSystem
         public Vector2 AnchorPosition { get; private set; }
         public float GridYPos { get; private set; }
 
-        private IGridType gridType;
+        protected IGridType gridType;
 
         // @formatter:off
         public SimpleGrid()                                                               : this(Vector2.one, Vector2.zero, 0f){}

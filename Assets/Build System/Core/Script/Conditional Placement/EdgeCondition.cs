@@ -1,4 +1,6 @@
 ﻿using System;
+using CustomBuildSystem.Placed;
+using CustomBuildSystem.Placing;
 using CustomGridSystem;
 using UnityEngine;
 
@@ -8,14 +10,14 @@ namespace CustomBuildSystem
     public class EdgeCondition : ISerializationCallbackReceiver
     {
         public ConditionType conditionType;
-        public PlaceableSOBase occupant;
+        public PlaceableMonoBase occupant;
 
         public static EdgeCondition CenterCondition => new EdgeCondition() { conditionType = ConditionType.MustBeEmpty };
         
         /// <summary>Checks if the condition is violated on the given edges</summary>
         /// <returns>true is the condition is not met</returns>
         /// <exception cref="NotImplementedException">When the condition is not implemented</exception>
-        [NonSerialized] public Func<DuoPlaceGrid<CellPlaceable, EdgePlaceable>, EdgeNumber, bool> HasViolated;
+        [NonSerialized] public Func<DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono>, EdgeNumber, bool> HasViolated;
         
         private void Init()
         {
@@ -40,16 +42,16 @@ namespace CustomBuildSystem
             }
         }
 
-        private bool OccupiedBySpecific(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, EdgeNumber edgeNumber)
+        private bool OccupiedBySpecific(DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> grid, EdgeNumber edgeNumber)
         {
-            EdgePlaceable placeable = grid.GetEdgeOccupant(edgeNumber, null);
-            return !(placeable != null && placeable.Scriptable == occupant);
+            EdgeOccupantMono occupantMono = grid.GetEdgeOccupant(edgeNumber, null);
+            return !(occupantMono != null && occupantMono.Scriptable == occupant);
         }
 
-        private bool NotOccupiedBySpecific(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, EdgeNumber edgeNumber)
+        private bool NotOccupiedBySpecific(DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> grid, EdgeNumber edgeNumber)
         {
-            EdgePlaceable placeable = grid.GetEdgeOccupant(edgeNumber, null);
-            return !(placeable == null || placeable.Scriptable != occupant);
+            EdgeOccupantMono occupantMono = grid.GetEdgeOccupant(edgeNumber, null);
+            return !(occupantMono == null || occupantMono.Scriptable != occupant);
         }
 
         public void OnBeforeSerialize()

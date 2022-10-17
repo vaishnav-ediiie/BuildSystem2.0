@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using CustomBuildSystem.Example;
 using CustomBuildSystem.PhotonIntegration;
+using CustomBuildSystem.Placed;
+using CustomBuildSystem.Placing;
 using UnityEngine;
 using CustomGridSystem;
 using Newtonsoft.Json;
@@ -13,13 +16,15 @@ namespace CustomBuildSystem
     [DefaultExecutionOrder(-123)]
     public class BuildSystem : MonoBehaviour
     {
-        [Header("References"), Tooltip("We build from the perspective of this player")] [SerializeField]
+        public static Dictionary<int, PlaceableMonoBase> AllPlaceableData;
+        
+        [Header("References"), SerializeField, Tooltip("We build from the perspective of this player")] 
         internal Transform player;
 
         [SerializeField, Tooltip("We raycast through this camera to find where player is looking")]
         internal Camera playerCamera;
 
-        [Header("Settings")] [SerializeField, Tooltip("Everything that we build will be placed on this layer. (Must be a single layer)")]
+        [Header("Settings"), SerializeField, Tooltip("Everything that we build will be placed on this layer. (Must be a single layer)")]
         internal LayerMask ProbsLayer;
 
         [SerializeField, Tooltip("Cell number of LastCell in the plot. How many cells player has, to build the house")]
@@ -37,14 +42,17 @@ namespace CustomBuildSystem
         [SerializeField, Tooltip("Maximum distance (in Cells) between player's current cell and the cell that player can place on")]
         internal int playerFOV = 1;
 
-        private BuiltSystemState currentState;
-        private Dictionary<int, DuoPlaceGrid<CellPlaceable, EdgePlaceable>> allGrids;
-        internal DuoPlaceGrid<CellPlaceable, EdgePlaceable> gridCurrent;
-        internal DuoPlaceGrid<CellPlaceable, EdgePlaceable> gridBelow;
-        internal DuoPlaceGrid<CellPlaceable, EdgePlaceable> gridAbove;
+        [SerializeField, Tooltip("All the probes will be spawned as child of this gameobject")]
+        internal Transform probesParent;
 
-        public BuildSystemBrain Brain { get; private set; }
-        public DuoPlaceGrid<CellPlaceable, EdgePlaceable> GridCurrent => gridCurrent;
+        private BuiltSystemState currentState;
+        private Dictionary<int, DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono>> allGrids;
+        internal DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> gridCurrent;
+        internal DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> gridBelow;
+        internal DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> gridAbove;
+
+        public BuildBrainBase Brain { get; private set; }
+        public DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> GridCurrent => gridCurrent;
         public Transform Player => player;
         public Camera PlayerCamera => playerCamera;
         public int CurrentFloor { get; private set; }
@@ -54,46 +62,23 @@ namespace CustomBuildSystem
         private void Awake()
         {
             SwitchState<BSS_Idle>();
-            allGrids = new Dictionary<int, DuoPlaceGrid<CellPlaceable, EdgePlaceable>>();
-            Brain = new BuildSystemBrain();
+            allGrids = new Dictionary<int, DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono>>();
+            if (Brain == null) Brain = new BuildBrainBase();
         }
 
         private void Start()
         {
             if (!ProbsLayer.IsSingleLayer()) Debug.LogError("ProbsLayer LayerMask contains multiple layers, make sure there's only one selected.");
-            if (Brain.AllPlaceableData == null || Brain.AllPlaceableData.Count == 0) Debug.LogError("AllPlaceableData in build system brain is empty, Save & Load wont work.");
+            if (AllPlaceableData == null || AllPlaceableData.Count == 0) Debug.LogError("AllPlaceableData in build system brain is empty, Save & Load wont work.");
             
             LoadFloor(CurrentFloorByPlayerPos);
-            Brain.Call_GridUpdate();
+            BuildEvents.Call_BuildSystemCreated(this);
+            BuildEvents.Call_GridUpdate();
+            
             
         }
-
-        public void UseBrain<T>(T brainInstance, bool copyPlaceableDataFromLastBrain = false) where T : BuildSystemBrain
-        {
-            if (brainInstance == null)
-            {
-                Debug.LogError("Given BrainInstance is null");
-                return;
-            }
-
-            if (copyPlaceableDataFromLastBrain)
-            {
-                if (Brain.AllPlaceableData == null || Brain.AllPlaceableData.Count == 0)
-                {
-                    Debug.LogError("AllPlaceableData in build system brain is empty, Save & Load wont work.");
-                }
-            }
-            else if (brainInstance.AllPlaceableData == null || brainInstance.AllPlaceableData.Count == 0)
-            {
-                Debug.LogError("AllPlaceableData in build system brain is empty, Save & Load wont work.");
-            }
-
-            brainInstance.CopyFrom(this.Brain, copyPlaceableDataFromLastBrain);
-            this.Brain = brainInstance;
-            if (this.gridCurrent != null) this.Brain.Call_GridUpdate();
-        }
-
-        void Update()
+        
+        private void Update()
         {
             if (CurrentFloorByPlayerPos != CurrentFloor)
             {
@@ -110,6 +95,11 @@ namespace CustomBuildSystem
             currentState.OnUpdate();
         }
 
+        private void OnDestroy()
+        {
+            BuildEvents.Call_BuildSystemDestroyed(this);
+        }
+        
         private void LoadFloor(int floor)
         {
             if (allGrids.ContainsKey(floor))
@@ -119,7 +109,7 @@ namespace CustomBuildSystem
             else
             {
                 float ypos = (floor * floorGap) + anchorPosition.y;
-                gridCurrent = new DuoPlaceGrid<CellPlaceable, EdgePlaceable>(lastCellNumber, cellSize, new Vector2(anchorPosition.x, anchorPosition.z), ypos);
+                gridCurrent = new DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono>(lastCellNumber, cellSize, new Vector2(anchorPosition.x, anchorPosition.z), ypos);
                 allGrids.Add(floor, gridCurrent);
             }
 
@@ -127,7 +117,7 @@ namespace CustomBuildSystem
             gridAbove = allGrids.ContainsKey(floor + 1) ? allGrids[floor + 1] : null;
             CurrentFloor = floor;
         }
-
+        
         internal T SwitchState<T>() where T : BuiltSystemState, new()
         {
             if (currentState != null) currentState.OnExit();
@@ -138,19 +128,30 @@ namespace CustomBuildSystem
 
             return currentState as T;
         }
+        
+        public void UseBrain<T>(T brainInstance) where T : BuildBrainBase
+        {
+            if (brainInstance == null)
+            {
+                Debug.LogError("Given BrainInstance is null");
+                return;
+            }
 
-        public void StartBuild(EdgePlaceableSO edgePlaceableSo)
+            this.Brain = brainInstance;
+        }
+        
+        public void StartBuild(EdgePlaceable edgePlaceable)
         {
             CancelBuild(false);
-            if (edgePlaceableSo.isDecorator) SwitchState<BSS_PlacingEdgeDecorator>().Setup(edgePlaceableSo);
-            else                             SwitchState<BSS_PlacingEdge>().Setup(edgePlaceableSo);
+            if (edgePlaceable.isDecorator) SwitchState<BSS_PlacingEdgeDecorator>().Setup(edgePlaceable);
+            else                             SwitchState<BSS_PlacingEdge>().Setup(edgePlaceable);
         }
 
-        public void StartBuild(CellPlaceableSO cellPlaceableSo)
+        public void StartBuild(CellPlaceable cellPlaceable)
         {
             CancelBuild(false);
-            if (cellPlaceableSo.isDecorator) SwitchState<BSS_PlacingCellDecorator>().Setup(cellPlaceableSo);
-            else                             SwitchState<BSS_PlacingCell>().Setup(cellPlaceableSo);
+            if (cellPlaceable.isDecorator)   SwitchState<BSS_PlacingCellDecorator>().Setup(cellPlaceable);
+            else                             SwitchState<BSS_PlacingCell>().Setup(cellPlaceable);
         }
         
         public void ConfirmBuild()
@@ -161,8 +162,7 @@ namespace CustomBuildSystem
             else if (activeType == typeof(BSS_PlacingCell)) ((BSS_PlacingCell)currentState).ConfirmPlacement();
             else if (activeType == typeof(BSS_PlacingEdge)) ((BSS_PlacingEdge)currentState).ConfirmPlacement();
         }
-
-
+        
         /// <summary>
         /// Cancel the Placement of currently active Placeable.
         /// </summary>
@@ -180,14 +180,20 @@ namespace CustomBuildSystem
             }
         }
 
+        public void EnterDeleteMode()
+        {
+            CancelBuild(false);
+            SwitchState<BSS_Deleting>();
+        }
+        
         public string Serialize()
         {
             Dictionary<int, string> allFloorsData = new Dictionary<int, string>();
-            foreach (KeyValuePair<int,DuoPlaceGrid<CellPlaceable,EdgePlaceable>> duoPlaceGrid in allGrids)
+            foreach (KeyValuePair<int,DuoPlaceGrid<CellOccupantMono,EdgeOccupantMono>> duoPlaceGrid in allGrids)
             {
                 string data = duoPlaceGrid.Value.SerializeWithOccupants(
-                    cellOccupantSerializer: cellPlaceable => JsonConvert.SerializeObject(new CellPlaceable.Serializer(cellPlaceable)),
-                    edgeOccupantSerializer: edgePlaceable => JsonConvert.SerializeObject(new EdgePlaceable.Serializer(edgePlaceable))
+                    cellOccupantSerializer: cellPlaceable => JsonConvert.SerializeObject(new CellOccupantMono.Serializer(cellPlaceable)),
+                    edgeOccupantSerializer: edgePlaceable => JsonConvert.SerializeObject(new EdgeOccupantMono.Serializer(edgePlaceable))
                 );
                 
                 allFloorsData.Add(duoPlaceGrid.Key, data);
@@ -199,14 +205,14 @@ namespace CustomBuildSystem
         public void Deserialize(string data)
         {
             Dictionary<int, string> allFloorsData = JsonConvert.DeserializeObject<Dictionary<int, string>>(data);
-            allGrids = new Dictionary<int, DuoPlaceGrid<CellPlaceable, EdgePlaceable>>();
+            allGrids = new Dictionary<int, DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono>>();
 
             foreach (KeyValuePair<int,string> floorInfo in allFloorsData)
             {
-                gridCurrent = new DuoPlaceGrid<CellPlaceable, EdgePlaceable>();
+                gridCurrent = new DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono>();
                 gridCurrent.DeserializeWithOccupants(floorInfo.Value,
-                    cellOccupantDeserializer: cellData => CellPlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<CellPlaceable.Serializer>(cellData), this),
-                    edgeOccupantDeserializer: edgeData => EdgePlaceable.Serializer.Deserialize(JsonConvert.DeserializeObject<EdgePlaceable.Serializer>(edgeData), this)
+                    cellOccupantDeserializer: cellData => CellOccupantMono.Serializer.Deserialize(JsonConvert.DeserializeObject<CellOccupantMono.Serializer>(cellData), this),
+                    edgeOccupantDeserializer: edgeData => EdgeOccupantMono.Serializer.Deserialize(JsonConvert.DeserializeObject<EdgeOccupantMono.Serializer>(edgeData), this)
                 );
                 allGrids.Add(floorInfo.Key, gridCurrent);
             }
@@ -223,9 +229,10 @@ namespace CustomBuildSystem
         /// <param name="anchorPosition">The position of BottomLeft Corner of the plot. Click the green-frustum-button on the axis-navigator (the 3D preview of axes) in scene view)</param>
         /// <param name="floorGap">The differance in Y-coordinate of any two floors</param>
         /// <returns>BuildSystem that is created</returns>
-        public static BuildSystem Setup(Transform player, Camera playerCamera, int probLayer, CellNumber lastCellNumber, Vector2 cellSize, Vector3 anchorPosition, float floorGap, bool createPhotonHandler = false)
+        public static BuildSystem Setup(Transform player, Camera playerCamera, int probLayer, CellNumber lastCellNumber, Vector2 cellSize, Vector3 anchorPosition, float floorGap)
         {
             BuildSystem buildSystem = new GameObject("Build System").AddComponent<BuildSystem>();
+            buildSystem.Brain = new BuildBrainBase();
             buildSystem.player = player;
             buildSystem.playerCamera = playerCamera;
             buildSystem.ProbsLayer = probLayer;
@@ -233,12 +240,6 @@ namespace CustomBuildSystem
             buildSystem.cellSize = cellSize;
             buildSystem.anchorPosition = anchorPosition;
             buildSystem.floorGap = floorGap;
-            if (createPhotonHandler)
-            {
-                BuildSystemPhotonHandler photonHandler = new GameObject("BuildSystemPhotonHandler").AddComponent<BuildSystemPhotonHandler>();
-                photonHandler.transform.parent = buildSystem.transform;
-                photonHandler.buildSystem = buildSystem;
-            }
 
             return buildSystem;
         }
@@ -260,14 +261,13 @@ namespace CustomBuildSystem
             CellVisuals cellVisuals,
             EdgeVisuals edgeVisuals = null,
             bool displayCellNumber = false,
-            bool createPhotonHandler = false,
             bool scaleVisualsByCellSize = true
             )
         {
-            BuildSystem system = Setup(player, playerCamera, probLayer, lastCellNumber, cellSize, anchorPosition, floorGap, createPhotonHandler);
+            BuildSystem system = Setup(player, playerCamera, probLayer, lastCellNumber, cellSize, anchorPosition, floorGap);
             BuildSystemVisuals visuals = new GameObject("BuildSystemVisuals").AddComponent<BuildSystemVisuals>();
             visuals.transform.parent = system.transform;
-            visuals.Setup(system, cellVisuals, edgeVisuals, displayCellNumber, scaleVisualsByCellSize);
+            visuals.Setup(cellVisuals, edgeVisuals, displayCellNumber, scaleVisualsByCellSize);
             return system;
         }
     }

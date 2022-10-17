@@ -1,6 +1,6 @@
 ﻿namespace CustomGridSystem
 {
-    internal interface IGridType
+    public interface IGridType
     {
         bool IsCellNumberValid(CellNumber number);
         bool IsEdgeNumberValid(EdgeNumber number);

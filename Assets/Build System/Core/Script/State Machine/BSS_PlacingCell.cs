@@ -1,31 +1,39 @@
-﻿using CustomGridSystem;
+﻿using CustomBuildSystem.Placed;
+using CustomBuildSystem.Placing;
+using CustomGridSystem;
 using UnityEngine;
 
 namespace CustomBuildSystem
 {
     public class BSS_PlacingCell : BSS_Placing
     {
-        public CellPlaceableSO Scriptable { get; private set; }
+        public CellPlaceable Placeable { get; private set; }
         public CellNumber CellNumber { get; private set; }
-        protected Vector2 screenCenter;
-        
-        protected override PlaceableSOBase PlaceableSoBase => Scriptable;
+
+        protected override PlaceableMonoBase PlaceableSoBase => Placeable;
         protected bool needRemark;
 
-        internal virtual void Setup(CellPlaceableSO placeable)
+        internal virtual void Setup(CellPlaceable placeable)
         {
-            screenCenter = new Vector2(Screen.width, Screen.height) / 2f;
-            this.Scriptable = placeable;
-            CurrentSpawned = Object.Instantiate(placeable.placingOkay, BuildSystem.transform); 
+            this.Placeable = placeable;
+            Debug.Log($"placeable: {placeable}     BuildSystem: {BuildSystem}");
+            CurrentSpawned = Object.Instantiate(placeable, BuildSystem.probesParent);
+            if (placeable.scaleToCellSize)
+            {
+                Transform plaTran = placeable.transform;
+                Vector2 cellSize = BuildSystem.gridCurrent.CellSize;
+                plaTran.localScale = new Vector3(cellSize.x, plaTran.localScale.y, cellSize.y);
+            }
+            
             Rotation = 0;
-            CellNumber = GetReferenceCell(screenCenter);
+            CellNumber = GetReferenceCell();
             UpdateVisuals(CellNumber);
             Mark(BuildSystem.Brain.ValidateCellPlacement(this), force: true);
         }
         
         public override void OnUpdate()
         {
-            CellNumber cellNumber = GetReferenceCell(screenCenter);
+            CellNumber cellNumber = GetReferenceCell();
             if (cellNumber != CellNumber) UpdateVisuals(cellNumber);
             
             HandleRotation();
@@ -33,7 +41,7 @@ namespace CustomBuildSystem
             if (BuildSystem.Brain.ShouldPlaceCell(this)) ConfirmPlacement();
         }
 
-        private void Mark(bool cp, bool force = false)
+        public void Mark(bool cp, bool force = false)
         {
             needRemark = false;
             if (cp == CanPlace && force == false) return;
@@ -41,40 +49,41 @@ namespace CustomBuildSystem
             if (cp)
             {
                 MarkOkay();
-                BuildSystem.Brain.Call_CellStateChanged(this, PlacingState.PlacingOkay);
+                BuildEvents.Call_CellStateChanged(this, PlacingState.PlacingOkay);
             }
             else
             {
                 MarkError();
-                BuildSystem.Brain.Call_CellStateChanged(this, PlacingState.PlacingError);
+                BuildEvents.Call_CellStateChanged(this, PlacingState.PlacingError);
             }
         }
 
         internal void ConfirmPlacement()
         {
-            if (Scriptable.isDecorator)
+            if (Placeable.isDecorator)
             {
-                CellPlaceable parent = BuildSystem.gridCurrent.GetCellOccupant(CellNumber, null);
+                CellOccupantMono parent = BuildSystem.gridCurrent.GetCellOccupant(CellNumber, null);
                 if (parent == null) return;
                 
-                CellDecorator placed = ReplaceActiveModel(Scriptable.placed, nullCurrentSpawned: true).AddComponent<CellDecorator>();
-                placed.Init(Scriptable, parent, Rotation, BuildSystem.ProbsLayer);
+                CellDecorator placed = Place().AddComponent<CellDecorator>();
+                placed.Init(Placeable, parent, Rotation, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
+                
             }
             else
             {
-                CellPlaceable placed = ReplaceActiveModel(Scriptable.placed, nullCurrentSpawned: true).AddComponent<CellPlaceable>();
-                placed.Init(Scriptable, CellNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
+                CellOccupantMono placed = Place().AddComponent<CellOccupantMono>();
+                placed.Init(Placeable, CellNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
             BuildSystem.SwitchState<BSS_Idle>();
-            BuildSystem.Brain.Call_CellStateChanged(this, PlacingState.Placed);
+            BuildEvents.Call_CellStateChanged(this, PlacingState.Placed);
         }
 
         internal void CancelPlacement()
         {
             CanPlace = false;
-            Object.Destroy(CurrentSpawned);
+            Object.Destroy(CurrentSpawned.gameObject);
             BuildSystem.SwitchState<BSS_Idle>();
         }
 

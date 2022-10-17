@@ -1,26 +1,19 @@
-﻿using UnityEngine;
+﻿using CustomBuildSystem.Placed;
+using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace CustomBuildSystem
 {
     public class BSS_Deleting : BuiltSystemState
     {
-        public IMonoPlaceable Target { get; private set; }
+        public OccupantBaseMono Target { get; private set; }
         private static readonly float MaxRaycastDistance = 500f;
         private GameObject currentSpawned;
         private Ray currentRay;
-        private Vector2 center;
-
-        public override void OnEnter()
-        {
-            // buildSystem.DeleteIcon
-            center = new Vector2(Screen.width, Screen.height) / 2f;
-            Debug.Log(center);
-        }
 
         public override void OnUpdate()
         {
-            Ray ray = BuildSystem.playerCamera.ScreenPointToRay(center);
+            Ray ray = BuildSystem.playerCamera.ScreenPointToRay(BuildSystem.Brain.GetMousePosition);
             if (ray.origin != currentRay.origin || ray.direction != currentRay.direction)
             {
                 RedoRaycast(ray);
@@ -45,7 +38,7 @@ namespace CustomBuildSystem
                     maxDistance: MaxRaycastDistance,
                     layerMask: BuildSystem.ProbsLayer))
             {
-                IMonoPlaceable comp = hitInfo.collider.GetComponentInParent<IMonoPlaceable>();
+                OccupantBaseMono comp = hitInfo.collider.GetComponentInParent<OccupantBaseMono>();
                 if (comp != null && comp != Target && comp.FloorNumber == BuildSystem.CurrentFloor)
                 {
                     SwitchActive(comp);
@@ -57,7 +50,7 @@ namespace CustomBuildSystem
             }
         }
 
-        void SwitchActive(IMonoPlaceable newOne)
+        void SwitchActive(OccupantBaseMono newOne)
         {
             SetCurrentRendererActive(true);
             Target = newOne;
@@ -86,12 +79,12 @@ namespace CustomBuildSystem
         
         private void ConfirmDelete()
         {
-            foreach (IMonoPlaceable monoPlaceable in Target.Children)
+            foreach (OccupantBaseMono monoPlaceable in Target.Children)
             {
-                BuildSystem.Brain.Call_OnItemDeleted(monoPlaceable);
+                BuildEvents.Call_OnItemDeleted(monoPlaceable);
             }
             
-            BuildSystem.Brain.Call_OnItemDeleted(Target);
+            BuildEvents.Call_OnItemDeleted(Target);
             Target.UnOccupy(BuildSystem);
             Object.Destroy(Target.gameObject);
             Object.Destroy(currentSpawned);

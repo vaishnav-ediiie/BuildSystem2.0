@@ -1,3 +1,4 @@
+using CustomBuildSystem.Placing;
 using CustomGridSystem;
 using UnityEngine;
 
@@ -5,9 +6,9 @@ namespace CustomBuildSystem
 {
     public abstract class BSS_Placing : BuiltSystemState
     {
-        protected GameObject CurrentSpawned;
+        protected PlaceableMonoBase CurrentSpawned;
         public bool CanPlace { get; protected set; }
-        protected abstract PlaceableSOBase PlaceableSoBase { get; }
+        protected abstract PlaceableMonoBase PlaceableSoBase { get; }
         private int rotation;
 
         public int Rotation
@@ -21,10 +22,10 @@ namespace CustomBuildSystem
             }
         }
 
-        protected CellNumber GetReferenceCell(Vector3 mousePos)
+        protected CellNumber GetReferenceCell()
         {
             Vector3 playerPos = BuildSystem.player.transform.position;
-            Vector3 lookPoint = ScreenToFloorPoint(mousePos);
+            Vector3 lookPoint = ScreenToFloorPoint(BuildSystem.Brain.GetMousePosition);
             CellNumber playerCell = BuildSystem.gridCurrent.CellPositionToNumber(playerPos);
             CellNumber lookAtCell = BuildSystem.gridCurrent.CellPositionToNumber(lookPoint);
             if (playerCell == lookAtCell) return playerCell;
@@ -36,10 +37,10 @@ namespace CustomBuildSystem
             return lookAtCell;
         }
         
-        protected EdgeNumber GetReferenceEdge(Vector3 mousePos)
+        protected EdgeNumber GetReferenceEdge()
         {
             Vector3 playerPos = BuildSystem.player.transform.position;
-            Direction direction = (ScreenToFloorPoint(mousePos) - playerPos).GetDirection();
+            Direction direction = (ScreenToFloorPoint(BuildSystem.Brain.GetMousePosition) - playerPos).GetDirection();
             return BuildSystem.gridCurrent.EdgePositionToNumber(playerPos, direction);
         }
 
@@ -56,7 +57,7 @@ namespace CustomBuildSystem
             target.localScale = new Vector3(cellSize.x, target.localScale.y, cellSize.y);
         }
         
-        protected virtual GameObject ReplaceActiveModel(GameObject toPlace, bool nullCurrentSpawned)
+        /*protected virtual GameObject ReplaceActiveModel(GameObject toPlace, bool nullCurrentSpawned)
         {
             Transform cpTrans = CurrentSpawned.transform;
             GameObject spawned = Object.Instantiate(toPlace, cpTrans.position, cpTrans.rotation, cpTrans.parent);
@@ -65,20 +66,33 @@ namespace CustomBuildSystem
             if (!nullCurrentSpawned) CurrentSpawned = spawned.gameObject;
             if (PlaceableSoBase.scaleToCellSize) ScaleToCellSize(spawned.transform);
             return spawned;
-        }
+        }*/
 
-        protected virtual void MarkOkay()
+        public virtual void MarkOkay()
         {
-            ReplaceActiveModel(PlaceableSoBase.placingOkay, nullCurrentSpawned: false);
             CanPlace = true;
+            CurrentSpawned.placed.SetActive(false);
+            CurrentSpawned.placingOkay.SetActive(true);
+            CurrentSpawned.placingError.SetActive(false);
         }
 
-        protected virtual void MarkError()
+        public virtual void MarkError()
         {
-            ReplaceActiveModel(PlaceableSoBase.placingError, nullCurrentSpawned: false);
+            CurrentSpawned.placed.SetActive(false);
+            CurrentSpawned.placingOkay.SetActive(false);
+            CurrentSpawned.placingError.SetActive(true);
             CanPlace = false;
         }
 
+        protected GameObject Place()
+        {
+            GameObject tr = CurrentSpawned.placed;
+            tr.SetActive(true);
+            tr.transform.parent = BuildSystem.probesParent;
+            Object.Destroy(CurrentSpawned.gameObject);
+            return tr;
+        }
+        
         public void MoveTo(Vector3 position, IGridNumber gridNumber)
         {
             CurrentSpawned.transform.position = position;

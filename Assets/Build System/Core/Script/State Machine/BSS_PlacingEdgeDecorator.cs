@@ -1,10 +1,12 @@
-﻿using CustomGridSystem;
+﻿using CustomBuildSystem.Placed;
+using CustomBuildSystem.Placing;
+using CustomGridSystem;
 
 namespace CustomBuildSystem
 {
     public class BSS_PlacingEdgeDecorator : BSS_PlacingEdge
     {
-        internal override void Setup(EdgePlaceableSO placeable)
+        internal override void Setup(EdgePlaceable placeable)
         {
             ConditionType current = placeable.placementCriteria.edgeCenter.conditionType;
             if (current != ConditionType.OccupiedByAny && current != ConditionType.OccupiedBySpecific)
@@ -14,7 +16,7 @@ namespace CustomBuildSystem
 
         protected override void HandleRotation()
         {
-            if (!Scriptable.parentRelativeRotation)
+            if (!Placeable.parentRelativeRotation)
             {
                 base.HandleRotation();
             }
@@ -24,10 +26,10 @@ namespace CustomBuildSystem
         {
             base.UpdateVisuals(edgeNumber);
             
-            if (Scriptable.parentRelativeRotation)
+            if (Placeable.parentRelativeRotation)
             {
-                EdgePlaceable placed = BuildSystem.gridCurrent.GetEdgeOccupant(edgeNumber, null);
-                if (placed != null) Rotation = placed.Rotation + Scriptable.rotationOffset;
+                EdgeOccupantMono placed = BuildSystem.gridCurrent.GetEdgeOccupant(edgeNumber, null);
+                if (placed != null) Rotation = placed.Rotation + Placeable.rotationOffset;
             }
             needRemark = true;
         }

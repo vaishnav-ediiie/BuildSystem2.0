@@ -1,4 +1,5 @@
 ﻿using System;
+using CustomBuildSystem.Placed;
 using CustomGridSystem;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ namespace CustomBuildSystem
         
         public bool AreSatisfied(BuildSystem buildSystem, BSS_PlacingEdge placingEdge)
         {
-            if (placingEdge.Scriptable.cellsCount <= 1) return StatsForSingleCell(buildSystem, placingEdge.EdgeNumber);
+            if (placingEdge.Placeable.cellsCount <= 1) return StatsForSingleCell(buildSystem, placingEdge.EdgeNumber);
             return StatsForMultiCell(buildSystem, placingEdge);
         }
 
@@ -41,11 +42,11 @@ namespace CustomBuildSystem
             return true;
         }
 
-        private bool CheckWithinBonds(DuoPlaceGrid<CellPlaceable, EdgePlaceable> grid, EdgeCondition condition, BSS_PlacingEdge placingEdge)
+        private bool CheckWithinBonds(DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> grid, EdgeCondition condition, BSS_PlacingEdge placingEdge)
         {
             if (condition.conditionType == ConditionType.DontCare) return false;
 
-            foreach (EdgeNumber edgeNumber in placingEdge.Scriptable.LoopAllEdges(placingEdge.EdgeNumber))
+            foreach (EdgeNumber edgeNumber in placingEdge.Placeable.LoopAllEdges(placingEdge.EdgeNumber))
             {
                 if (condition.HasViolated(grid, edgeNumber)) return true;
             }

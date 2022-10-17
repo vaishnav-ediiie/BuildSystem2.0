@@ -60,7 +60,7 @@ namespace CustomGridSystem
 
         public bool IsCellOccupied(CellNumber place)
         {
-            return IsCellNumberValid(place) && allCellOccupants.ContainsKey(place.ToString());
+            return allCellOccupants.ContainsKey(place.ToString());
         }
 
         public void OccupyCell(CellNumber place, TCellOccupant occupant)
@@ -137,7 +137,7 @@ namespace CustomGridSystem
 
         public bool IsEdgeOccupied(EdgeNumber place)
         {
-            return IsEdgeNumberValid(place) && allEdgeOccupants.ContainsKey(place.ToString());
+            return allEdgeOccupants.ContainsKey(place.ToString());
         }
 
         public void OccupyEdge(EdgeNumber place, TEdgeOccupant occupant)

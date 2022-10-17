@@ -1,99 +1,118 @@
 using System;
+using CustomBuildSystem.Placed;
+using CustomBuildSystem.Placing;
 using Photon.Pun;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace CustomBuildSystem.PhotonIntegration
 {
     [RequireComponent(typeof(PhotonView))]
     public class BuildSystemPhotonHandler : MonoBehaviour
     {
-        internal BuildSystem buildSystem;
-        private PhotonView photonView;
+        private LayerMask probsLayer;
+        private BuildSystem _buildSystem;
+        private PhotonView _photonView;
 
+        #region Unity Callbacks
         void OnEnable()
         {
-            photonView = GetComponent<PhotonView>();
-            buildSystem.Brain.OnCellStateChanged += OnCellStateChanged;
-            buildSystem.Brain.OnEdgeStateChanged += OnEdgeStateChanged;
+            _photonView = GetComponent<PhotonView>();
+            BuildEvents.OnBuildSystemCreated += OnBuildSystemCreated;
+            BuildEvents.OnCellStateChanged += OnCellStateChanged;
+            BuildEvents.OnEdgeStateChanged += OnEdgeStateChanged;
+            BuildEvents.OnItemDeleted += OnItemDeleted;
         }
 
         void OnDisable()
         {
-            buildSystem.Brain.OnCellStateChanged -= OnCellStateChanged;
-            buildSystem.Brain.OnEdgeStateChanged -= OnEdgeStateChanged;
-            buildSystem.Brain.OnItemDeleted -= OnItemDeleted;
+            BuildEvents.OnBuildSystemCreated -= OnBuildSystemCreated;
+            BuildEvents.OnCellStateChanged -= OnCellStateChanged;
+            BuildEvents.OnEdgeStateChanged -= OnEdgeStateChanged;
+            BuildEvents.OnItemDeleted -= OnItemDeleted;
+        }
+        #endregion
+
+        // Change the implementation of Communicator Functions according to game need 
+        #region Communicator Functions
+        public static GameObject InitGameObject(GameObject gameObject, Vector3 position, Quaternion rotation, Transform parent, int layer)
+        {
+            GameObject go = Instantiate(gameObject, position, rotation, parent);
+            go.SetLayerRecursive(layer);
+            return go;
         }
 
-        private string GetNameFor(int plotID, string modifier) => $"{plotID}|{modifier}";
+        public static string GetPlotID(Vector3 position)
+        {
+            return "0";
+        }
+
+        private string GetNameFor(Vector3 position, string placement)
+        {
+            return $"{GetPlotID(position)}|{placement}";
+        }
+        #endregion
+
+        #region Build System Event Callbacks
+        private void OnBuildSystemCreated(BuildSystem system)
+        {
+            this._buildSystem = system;
+        }
 
         private void OnEdgeStateChanged(BSS_PlacingEdge placingEdge, PlacingState newState)
         {
-            if (newState != PlacingState.Placed) return;
-            Vector3 position = buildSystem.gridCurrent.EdgeNumberToPosition(placingEdge.EdgeNumber);
-            string itemID = GetNameFor(TempClass.GetActivePlotID(), placingEdge.EdgeNumber.ToString());
+            if (_buildSystem == null || newState != PlacingState.Placed) return;
+            Vector3 position = _buildSystem.gridCurrent.EdgeNumberToPosition(placingEdge.EdgeNumber);
+            string placedItemID = GetNameFor(position, placingEdge.EdgeNumber.ToString());
 
-            photonView.RPC(nameof(RPC_OnItemSpawned), RpcTarget.OthersBuffered,
-                placingEdge.Scriptable.ID, itemID, position, placingEdge.Rotation);
+            _photonView.RPC(nameof(RPC_OnItemSpawned), RpcTarget.Others,
+                placingEdge.Placeable.ID, placedItemID, position, placingEdge.Rotation);
         }
 
         private void OnCellStateChanged(BSS_PlacingCell placingCell, PlacingState newState)
         {
-            if (newState != PlacingState.Placed) return;
-            Vector3 position = buildSystem.gridCurrent.CellNumberToPosition(placingCell.CellNumber);
-            string itemID = GetNameFor(TempClass.GetActivePlotID(), placingCell.CellNumber.ToString());
+            if (_buildSystem == null || newState != PlacingState.Placed) return;
+            Vector3 position = _buildSystem.gridCurrent.CellNumberToPosition(placingCell.CellNumber);
+            string placedItemID = GetNameFor(position, placingCell.CellNumber.ToString());
 
-            photonView.RPC(nameof(RPC_OnItemSpawned), RpcTarget.OthersBuffered,
-                placingCell.Scriptable.ID, itemID, position, placingCell.Rotation);
+            _photonView.RPC(nameof(RPC_OnItemSpawned), RpcTarget.Others,
+                placingCell.Placeable.ID, placedItemID, position, placingCell.Rotation);
         }
 
-        private void OnItemDeleted(IMonoPlaceable deleting)
+        private void OnItemDeleted(OccupantBaseMono deleting)
         {
             Type type = deleting.GetType();
             string itemID;
-            if      (type == typeof(CellDecorator)) itemID = GetNameFor(TempClass.GetActivePlotID(), ((CellDecorator)deleting).Number.ToString());
-            else if (type == typeof(EdgeDecorator)) itemID = GetNameFor(TempClass.GetActivePlotID(), ((EdgeDecorator)deleting).Number.ToString());
-            else if (type == typeof(CellPlaceable)) itemID = GetNameFor(TempClass.GetActivePlotID(), ((CellPlaceable)deleting).Number.ToString());
-            else if (type == typeof(EdgePlaceable)) itemID = GetNameFor(TempClass.GetActivePlotID(), ((EdgePlaceable)deleting).Number.ToString());
-            else throw new NotImplementedException("The give type is not implemented");
-            
-            photonView.RPC(nameof(RPC_OnItemDeleted), RpcTarget.OthersBuffered, itemID);
+            if (type == typeof(CellDecorator)) itemID = GetNameFor(deleting.transform.position, ((CellDecorator)deleting).Number.ToString());
+            else if (type == typeof(EdgeDecorator)) itemID = GetNameFor(deleting.transform.position, ((EdgeDecorator)deleting).Number.ToString());
+            else if (type == typeof(CellOccupantMono)) itemID = GetNameFor(deleting.transform.position, ((CellOccupantMono)deleting).Number.ToString());
+            else if (type == typeof(EdgeOccupantMono)) itemID = GetNameFor(deleting.transform.position, ((EdgeOccupantMono)deleting).Number.ToString());
+            else throw new NotImplementedException($"The give type ({type}) is not implemented");
+
+            _photonView.RPC(nameof(RPC_OnItemDeleted), RpcTarget.Others, itemID);
         }
+        #endregion
 
-
+        #region RPCs
         [PunRPC]
         public void RPC_OnItemSpawned(int placeableID, string itemID, Vector3 position, int rotation)
         {
-            PlaceableSOBase placeableSo = buildSystem.Brain.AllPlaceableData[placeableID];
+            // Note: Do not use _buildSystem inside RPC (Because this is being executed on the receiver's end where build system might not be present or worst be completely different from sender's system)
+            PlaceableMonoBase placeableSo = BuildSystem.AllPlaceableData[placeableID];
             Quaternion rotQuat = Quaternion.Euler(0, rotation, 0);
-            GameObject spawned = TempClass.InitGameObject(placeableSo.placed, position, rotQuat, transform, buildSystem.ProbsLayer);
+            GameObject spawned = InitGameObject(placeableSo.placed, position, rotQuat, transform, probsLayer);
             spawned.name = itemID;
         }
 
         [PunRPC]
         public void RPC_OnItemDeleted(string itemID)
         {
+            // Note: Do not use _buildSystem inside RPC (Because this is being executed on the receiver's end where build system might not be present or worst be completely different from sender's system)
             Transform obj = transform.Find(itemID);
             if (obj != null)
             {
                 Destroy(obj.gameObject);
             }
         }
-    }
-
-
-    public static class TempClass
-    {
-        public static GameObject InitGameObject(GameObject gameObject, Vector3 position, Quaternion rotation, Transform parent, int layer)
-        {
-            GameObject go = Object.Instantiate(gameObject, position, rotation, parent);
-            go.SetLayerRecursive(layer);
-            return go;
-        }
-        
-        public static int GetActivePlotID()
-        {
-            return 0;
-        } 
+        #endregion
     }
 }
