@@ -6,7 +6,7 @@ namespace CustomGridSystem
     [Serializable]
     public struct EdgeNumber : IEquatable<EdgeNumber>, IGridNumber
     {
-       /// <summary>For horizontal cellType, returns Cell right of this edge; For vertical cellType, returns Cell below this edge. </summary>
+        /// <summary>For horizontal cellType, returns Cell right of this edge; For vertical cellType, returns Cell below this edge. </summary>
         public CellNumber CellAfter { get; }
 
         /// <summary>For horizontal cellType, returns Cell left of this edge; For vertical cellType, returns Cell above this edge. </summary>
@@ -14,11 +14,11 @@ namespace CustomGridSystem
         {
             get
             {
-                if (edgeType == EdgeType.Vertical) return new CellNumber(CellAfter.row - 1, CellAfter.column);
+                if (edgeType == EdgeType.Horizontal) return new CellNumber(CellAfter.row - 1, CellAfter.column);
                 return new CellNumber(CellAfter.row, CellAfter.column - 1);
             }
         }
-        
+
         public EdgeType edgeType;
 
         public EdgeNumber(int row, int column, EdgeType edgeType)
@@ -27,10 +27,39 @@ namespace CustomGridSystem
             this.edgeType = edgeType;
         }
 
-        internal EdgeNumber(CellNumber cellAfterNumber, EdgeType edgeType)
+        public EdgeNumber(CellNumber cellAfterNumber, EdgeType edgeType)
         {
             this.CellAfter = cellAfterNumber;
             this.edgeType = edgeType;
+        }
+
+        public EdgeNumber(CellNumber cellOne, CellNumber cellTwo)
+        {
+            CellNumber diff = cellOne - cellTwo;
+            if (diff.row == 1 && diff.column == 0)
+            {
+                this.CellAfter = cellOne;
+                this.edgeType = EdgeType.Horizontal;
+            }
+            else if (diff.row == -1 && diff.column == 0)
+            {
+                this.CellAfter = cellTwo;
+                this.edgeType = EdgeType.Horizontal;
+            }
+            else if (diff.row == 0 && diff.column == 1)
+            {
+                this.CellAfter = cellOne;
+                this.edgeType = EdgeType.Vertical;
+            }
+            else if (diff.row == 0 && diff.column == -1)
+            {
+                this.CellAfter = cellTwo;
+                this.edgeType = EdgeType.Vertical;
+            }
+            else
+            {
+                throw new ArgumentException($"There is no edge connecting {cellOne} & {cellTwo}");
+            }
         }
 
         public bool Equals(EdgeNumber other)
@@ -38,7 +67,7 @@ namespace CustomGridSystem
             return (other.CellAfter == this.CellAfter) && (other.edgeType == this.edgeType);
         }
 
-        
+
         public override bool Equals(object obj) => obj is EdgeNumber other && Equals(other);
         public override int GetHashCode() => $"{CellAfter.row}{CellAfter.column}{edgeType}".GetHashCode();
         public override string ToString() => $"[{CellAfter.row}, {CellAfter.column}, {edgeType}]";

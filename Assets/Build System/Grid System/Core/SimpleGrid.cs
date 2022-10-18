@@ -84,11 +84,11 @@ namespace CustomGridSystem
             int row, col;
             switch (edgeType)
             {
-                case EdgeType.Vertical:
+                case EdgeType.Horizontal:
                     row = Mathf.Clamp(rawNumber.row, 0, lastCell.row);
                     col = Mathf.Clamp(rawNumber.column, 0, lastCell.column + 1);
                     break;
-                case EdgeType.Horizontal:
+                case EdgeType.Vertical:
                     row = Mathf.Clamp(rawNumber.row, 0, lastCell.row + 1);
                     col = Mathf.Clamp(rawNumber.column, 0, lastCell.column);
                     break;
@@ -109,19 +109,19 @@ namespace CustomGridSystem
                 case Direction.Up:
                     row = Mathf.Clamp(rawNumber.row, 0, lastCell.row) + 1;
                     col = Mathf.Clamp(rawNumber.column, 0, lastCell.column);
-                    return new EdgeNumber(row, col, EdgeType.Vertical);
+                    return new EdgeNumber(row, col, EdgeType.Horizontal);
                 case Direction.Down:
                     row = Mathf.Clamp(rawNumber.row, 0, lastCell.row);
                     col = Mathf.Clamp(rawNumber.column, 0, lastCell.column);
-                    return new EdgeNumber(row, col, EdgeType.Vertical);
+                    return new EdgeNumber(row, col, EdgeType.Horizontal);
                 case Direction.Right:
                     row = Mathf.Clamp(rawNumber.row, 0, lastCell.row);
                     col = Mathf.Clamp(rawNumber.column, 0, lastCell.column) + 1;
-                    return new EdgeNumber(row, col, EdgeType.Horizontal);
+                    return new EdgeNumber(row, col, EdgeType.Vertical);
                 case Direction.Left:
                     row = Mathf.Clamp(rawNumber.row, 0, lastCell.row);
                     col = Mathf.Clamp(rawNumber.column, 0, lastCell.column);
-                    return new EdgeNumber(row, col, EdgeType.Horizontal);
+                    return new EdgeNumber(row, col, EdgeType.Vertical);
                 default:
                     throw new NotImplementedException($"Cannot understand direction: {direction}");
             }

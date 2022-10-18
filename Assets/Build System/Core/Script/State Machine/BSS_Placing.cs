@@ -4,11 +4,11 @@ using UnityEngine;
 
 namespace CustomBuildSystem
 {
-    public abstract class BSS_Placing : BuiltSystemState
+    public abstract class BSS_Placing<TMono> : BuiltSystemState
+    where TMono : PlaceableMonoBase
     {
-        protected PlaceableMonoBase CurrentSpawned;
+        public TMono Current;
         public bool CanPlace { get; protected set; }
-        protected abstract PlaceableMonoBase PlaceableSoBase { get; }
         private int rotation;
 
         public int Rotation
@@ -16,8 +16,8 @@ namespace CustomBuildSystem
             get => rotation;
             set
             {
-                Vector3 rot = CurrentSpawned.transform.rotation.eulerAngles;
-                CurrentSpawned.transform.rotation = Quaternion.Euler(rot.x, value, rot.z);
+                Vector3 rot = Current.transform.rotation.eulerAngles;
+                Current.transform.rotation = Quaternion.Euler(rot.x, value, rot.z);
                 rotation = value;
             }
         }
@@ -71,37 +71,37 @@ namespace CustomBuildSystem
         public virtual void MarkOkay()
         {
             CanPlace = true;
-            CurrentSpawned.placed.SetActive(false);
-            CurrentSpawned.placingOkay.SetActive(true);
-            CurrentSpawned.placingError.SetActive(false);
+            Current.placed.SetActive(false);
+            Current.placingOkay.SetActive(true);
+            Current.placingError.SetActive(false);
         }
 
         public virtual void MarkError()
         {
-            CurrentSpawned.placed.SetActive(false);
-            CurrentSpawned.placingOkay.SetActive(false);
-            CurrentSpawned.placingError.SetActive(true);
+            Current.placed.SetActive(false);
+            Current.placingOkay.SetActive(false);
+            Current.placingError.SetActive(true);
             CanPlace = false;
         }
 
         protected GameObject Place()
         {
-            GameObject tr = CurrentSpawned.placed;
+            GameObject tr = Current.placed;
             tr.SetActive(true);
             tr.transform.parent = BuildSystem.probesParent;
-            Object.Destroy(CurrentSpawned.gameObject);
+            Object.Destroy(Current.gameObject);
             return tr;
         }
         
         public void MoveTo(Vector3 position, IGridNumber gridNumber)
         {
-            CurrentSpawned.transform.position = position;
+            Current.transform.position = position;
         }
 
         public void RotateTo(float xAngle, float yAngle, float zAngle)
         {
             rotation = (int)yAngle;
-            CurrentSpawned.transform.rotation = Quaternion.Euler(xAngle, yAngle, zAngle);
+            Current.transform.rotation = Quaternion.Euler(xAngle, yAngle, zAngle);
         }
 
         public void RotateBy(float xAngle, float yAngle, float zAngle)
@@ -109,7 +109,7 @@ namespace CustomBuildSystem
             rotation += (int)yAngle;
             if (rotation < 0) rotation = 360 + rotation;
             else if (rotation >= 360) rotation -= 360;
-            CurrentSpawned.transform.Rotate(xAngle, yAngle, zAngle);
+            Current.transform.Rotate(xAngle, yAngle, zAngle);
         }
     }
 }

@@ -9,8 +9,8 @@ namespace CustomBuildSystem.Placed
         public abstract GameObject GetDeletePrefab();
         public abstract void UnOccupy(BuildSystem buildSystem);
         public abstract void Occupy(BuildSystem buildSystem);
-        public abstract bool HasDecorator(PlaceableMonoBase scriptable);
-        public abstract int ScriptableID { get; }
+        public abstract bool HasDecorator(PlaceableMonoBase placeable);
+        public abstract int PlaceableID { get; }
         public abstract int FloorNumber { get; }
         public abstract IEnumerable<OccupantBaseMono> Children { get; }
     }

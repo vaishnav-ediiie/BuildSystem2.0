@@ -65,7 +65,7 @@ namespace CustomBuildSystem.PhotonIntegration
             string placedItemID = GetNameFor(position, placingEdge.EdgeNumber.ToString());
 
             _photonView.RPC(nameof(RPC_OnItemSpawned), RpcTarget.Others,
-                placingEdge.Placeable.ID, placedItemID, position, placingEdge.Rotation);
+                placingEdge.Current.ID, placedItemID, position, placingEdge.Rotation);
         }
 
         private void OnCellStateChanged(BSS_PlacingCell placingCell, PlacingState newState)
@@ -75,7 +75,7 @@ namespace CustomBuildSystem.PhotonIntegration
             string placedItemID = GetNameFor(position, placingCell.CellNumber.ToString());
 
             _photonView.RPC(nameof(RPC_OnItemSpawned), RpcTarget.Others,
-                placingCell.Placeable.ID, placedItemID, position, placingCell.Rotation);
+                placingCell.Current.ID, placedItemID, position, placingCell.Rotation);
         }
 
         private void OnItemDeleted(OccupantBaseMono deleting)

@@ -23,9 +23,9 @@ namespace CustomGridSystem
             
             switch (number.edgeType)
             {
-                case EdgeType.Horizontal:
-                    return number.CellAfter.row < lastCellNumber.row && number.CellAfter.column < lastCellNumber.column + 1;  
                 case EdgeType.Vertical:
+                    return number.CellAfter.row < lastCellNumber.row && number.CellAfter.column < lastCellNumber.column + 1;  
+                case EdgeType.Horizontal:
                     return number.CellAfter.row < lastCellNumber.row + 1 && number.CellAfter.column < lastCellNumber.column;  
                 default:
                     throw new NotImplementedException($"Cannot understand direction: {number.edgeType}");

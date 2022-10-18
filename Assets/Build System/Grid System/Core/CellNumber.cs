@@ -30,10 +30,10 @@ namespace CustomGridSystem
         {
             return direction switch
             {
-                Direction.Down  => new EdgeNumber(this.row, this.column, EdgeType.Vertical),
-                Direction.Up    => new EdgeNumber(this.row + 1, this.column, EdgeType.Vertical),
-                Direction.Left  => new EdgeNumber(this.row, this.column, EdgeType.Horizontal),
-                Direction.Right => new EdgeNumber(this.row, this.column + 1, EdgeType.Horizontal),
+                Direction.Down  => new EdgeNumber(this.row, this.column, EdgeType.Horizontal),
+                Direction.Up    => new EdgeNumber(this.row + 1, this.column, EdgeType.Horizontal),
+                Direction.Left  => new EdgeNumber(this.row, this.column, EdgeType.Vertical),
+                Direction.Right => new EdgeNumber(this.row, this.column + 1, EdgeType.Vertical),
                 _ => throw new NotImplementedException($"Unknown direction {direction}")
             };
         }

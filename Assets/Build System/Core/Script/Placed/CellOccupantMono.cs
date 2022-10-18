@@ -8,15 +8,15 @@ namespace CustomBuildSystem.Placed
 {
     public class CellOccupantMono : OccupantBaseMono
     {
-        public CellPlaceable Scriptable { get; private set; }
+        public CellPlaceable Placeable { get; private set; }
         public CellNumber Number { get; private set; }
         public int Rotation { get; private set; }
         public int Floor { get; private set; }
         [NonSerialized] public List<CellDecorator> Decorators;
 
-        public void Init(CellPlaceable scriptable, CellNumber number, int rotation, int floorNumber, LayerMask layer)
+        public void Init(CellPlaceable placeable, CellNumber number, int rotation, int floorNumber, LayerMask layer)
         {
-            this.Scriptable = scriptable;
+            this.Placeable = placeable;
             this.Number = number;
             this.Rotation = rotation;
             this.Decorators = new List<CellDecorator>();
@@ -24,11 +24,11 @@ namespace CustomBuildSystem.Placed
             this.gameObject.SetLayerRecursive(layer.GetLayer());
         }
 
-        public override GameObject GetDeletePrefab() => Scriptable.placingError;
+        public override GameObject GetDeletePrefab() => Placeable.placingError;
 
         public override void Occupy(BuildSystem buildSystem)
         {
-            CellLayoutInfo layoutInfo = Scriptable.LayoutInfo(Number, Rotation);
+            CellLayoutInfo layoutInfo = Placeable.LayoutInfo.Refresh(Number, Rotation);
 
             if (layoutInfo.IsSingleCelled)
             {
@@ -44,7 +44,7 @@ namespace CustomBuildSystem.Placed
 
         public override void UnOccupy(BuildSystem buildSystem)
         {
-            CellLayoutInfo layoutInfo = Scriptable.LayoutInfo(Number, Rotation);
+            CellLayoutInfo layoutInfo = Placeable.LayoutInfo.Refresh(Number, Rotation);
             if (layoutInfo.IsSingleCelled)
             {
                 buildSystem.gridCurrent.EmptyCell(Number);
@@ -62,17 +62,17 @@ namespace CustomBuildSystem.Placed
             }
         }
 
-        public override bool HasDecorator(PlaceableMonoBase scriptable)
+        public override bool HasDecorator(PlaceableMonoBase placeable)
         {
             foreach (CellDecorator decorator in Decorators)
             {
-                if (decorator.Placeable == scriptable) return true;
+                if (decorator.Placeable == placeable) return true;
             }
 
             return false;
         }
 
-        public override int ScriptableID => Scriptable.ID;
+        public override int PlaceableID => Placeable.ID;
         public override int FloorNumber => Floor;
 
         public void RemoveDecorator(CellDecorator deco)
@@ -104,7 +104,7 @@ namespace CustomBuildSystem.Placed
         [Serializable]
         public class Serializer
         {
-            public int scriptableID;
+            public int placeableID;
             public int row;
             public int column;
             public int rotation;
@@ -117,7 +117,7 @@ namespace CustomBuildSystem.Placed
 
             public Serializer(CellOccupantMono source)
             {
-                this.scriptableID = source.Scriptable.ID;
+                this.placeableID = source.Placeable.ID;
                 this.row = source.Number.row;
                 this.column = source.Number.column;
                 this.rotation = source.Rotation;
@@ -133,7 +133,7 @@ namespace CustomBuildSystem.Placed
 
             public static CellOccupantMono Deserialize(Serializer serializer, BuildSystem buildSystem)
             {
-                CellPlaceable placeable = BuildSystem.AllPlaceableData[serializer.scriptableID] as CellPlaceable;
+                CellPlaceable placeable = BuildSystem.AllPlaceableData[serializer.placeableID] as CellPlaceable;
                 if (placeable == null)
                 {
                     foreach (KeyValuePair<int, PlaceableMonoBase> placeableSoBase in BuildSystem.AllPlaceableData)
@@ -141,7 +141,7 @@ namespace CustomBuildSystem.Placed
                         Debug.Log($" We Have: {placeableSoBase.Key} as {placeableSoBase.Value.GetType()}");
                     }
 
-                    Debug.Log($"Not found with id: {serializer.scriptableID} as CellPlaceableSO");
+                    Debug.Log($"Not found with id: {serializer.placeableID} as CellPlaceableSO");
                 }
 
                 CellNumber cellNumber = new CellNumber(serializer.row, serializer.column);
@@ -153,7 +153,7 @@ namespace CustomBuildSystem.Placed
 
                 foreach (DecoSer decoSer in serializer.decorators)
                 {
-                    CellPlaceable deco = BuildSystem.AllPlaceableData[decoSer.scriptableID] as CellPlaceable;
+                    CellPlaceable deco = BuildSystem.AllPlaceableData[decoSer.placeableID] as CellPlaceable;
                     Quaternion decoRot = Quaternion.Euler(0, decoSer.rotation, 0);
                     CellDecorator decoPlaced = Instantiate(deco.placed, position, decoRot).AddComponent<CellDecorator>();
                     decoPlaced.Init(deco, parent, decoSer.rotation, buildSystem.ProbsLayer);
@@ -167,7 +167,7 @@ namespace CustomBuildSystem.Placed
         [Serializable]
         public class DecoSer
         {
-            public int scriptableID;
+            public int placeableID;
             public int rotation;
 
             public DecoSer()
@@ -176,7 +176,7 @@ namespace CustomBuildSystem.Placed
 
             public DecoSer(CellDecorator source)
             {
-                scriptableID = source.Placeable.ID;
+                placeableID = source.Placeable.ID;
                 rotation = source.Rotation;
             }
         }

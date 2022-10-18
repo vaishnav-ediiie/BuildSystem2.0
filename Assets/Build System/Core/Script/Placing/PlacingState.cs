@@ -1,4 +1,4 @@
-﻿namespace CustomBuildSystem
+﻿namespace CustomBuildSystem.Placing
 {
     public enum PlacingState
     {

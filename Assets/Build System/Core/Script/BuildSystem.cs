@@ -48,9 +48,7 @@ namespace CustomBuildSystem
         private BuiltSystemState currentState;
         private Dictionary<int, DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono>> allGrids;
         internal DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> gridCurrent;
-        internal DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> gridBelow;
-        internal DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> gridAbove;
-
+        
         public BuildBrainBase Brain { get; private set; }
         public DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> GridCurrent => gridCurrent;
         public Transform Player => player;
@@ -112,9 +110,6 @@ namespace CustomBuildSystem
                 gridCurrent = new DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono>(lastCellNumber, cellSize, new Vector2(anchorPosition.x, anchorPosition.z), ypos);
                 allGrids.Add(floor, gridCurrent);
             }
-
-            gridBelow = allGrids.ContainsKey(floor - 1) ? allGrids[floor - 1] : null;
-            gridAbove = allGrids.ContainsKey(floor + 1) ? allGrids[floor + 1] : null;
             CurrentFloor = floor;
         }
         
@@ -269,6 +264,12 @@ namespace CustomBuildSystem
             visuals.transform.parent = system.transform;
             visuals.Setup(cellVisuals, edgeVisuals, displayCellNumber, scaleVisualsByCellSize);
             return system;
+        }
+
+        public DuoPlaceGrid<CellOccupantMono, EdgeOccupantMono> GetGrid(int floorNumber)
+        {
+            if (allGrids.ContainsKey(floorNumber)) return allGrids[floorNumber];
+            return null;
         }
     }
 }

@@ -7,17 +7,16 @@ using UnityEngine;
 
 namespace CustomBuildSystem.Placed
 {
-    public class CellDecorator : OccupantBaseMono
+    public class EdgeDecorator : OccupantBaseMono
     {
-        public CellPlaceable Placeable { get; private set; }
-        public CellOccupantMono Parent { get; private set; }
+        public EdgePlaceable Placeable { get; private set; }
+        public EdgeOccupantMono Parent { get; private set; }
         public int Rotation { get; private set; }
+        public EdgeNumber Number => Parent.Number;
 
-        public CellNumber Number => Parent.Number;
-
-        public void Init(CellPlaceable scriptable, CellOccupantMono parent, int rotation, LayerMask layer)
+        public void Init(EdgePlaceable placeable, EdgeOccupantMono parent, int rotation, LayerMask layer)
         {
-            this.Placeable = scriptable;
+            this.Placeable = placeable;
             this.Parent = parent;
             this.Rotation = rotation;
             this.gameObject.SetLayerRecursive(layer.GetLayer());
@@ -26,9 +25,10 @@ namespace CustomBuildSystem.Placed
         public override GameObject GetDeletePrefab() => Placeable.placingError;
         public override void UnOccupy(BuildSystem buildSystem) => Parent.RemoveDecorator(this);
         public override void Occupy(BuildSystem buildSystem) => Parent.AddDecorator(this);
-        public override bool HasDecorator(PlaceableMonoBase scriptable) => false;
-        public override int ScriptableID => Placeable.ID;
+        public override bool HasDecorator(PlaceableMonoBase placeable) => false;
+        public override int PlaceableID => Placeable.ID;
         public override int FloorNumber => this.Parent.Floor;
+
 
         public override IEnumerable<OccupantBaseMono> Children
         {

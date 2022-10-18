@@ -11,8 +11,8 @@ public class EdgeDemo : MonoBehaviour
 
     void Update()
     {
-        EdgeNumber numberHorz = gridMaker.SimpleGrid.EdgePositionToNumber(transform.position, EdgeType.Vertical);
-        EdgeNumber numberVert = gridMaker.SimpleGrid.EdgePositionToNumber(transform.position, EdgeType.Horizontal);
+        EdgeNumber numberHorz = gridMaker.SimpleGrid.EdgePositionToNumber(transform.position, EdgeType.Horizontal);
+        EdgeNumber numberVert = gridMaker.SimpleGrid.EdgePositionToNumber(transform.position, EdgeType.Vertical);
         stickerHorizontal.position = gridMaker.SimpleGrid.EdgeNumberToPosition(numberHorz);
         stickerVertical.position = gridMaker.SimpleGrid.EdgeNumberToPosition(numberVert);
         Debug.Log(numberHorz);

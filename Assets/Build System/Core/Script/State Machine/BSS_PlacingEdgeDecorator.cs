@@ -1,5 +1,6 @@
 ﻿using CustomBuildSystem.Placed;
 using CustomBuildSystem.Placing;
+using CustomBuildSystem.Placing.Conditional;
 using CustomGridSystem;
 
 namespace CustomBuildSystem
@@ -8,15 +9,17 @@ namespace CustomBuildSystem
     {
         internal override void Setup(EdgePlaceable placeable)
         {
-            ConditionType current = placeable.placementCriteria.edgeCenter.conditionType;
-            if (current != ConditionType.OccupiedByAny && current != ConditionType.OccupiedBySpecific)
-                placeable.placementCriteria.edgeCenter.conditionType = ConditionType.OccupiedByAny;
+            if (   !placeable.HasCondition(ConditionType.OccupiedByAny,      0, relativeFloor: true, invertCondition: false)
+                && !placeable.HasCondition(ConditionType.OccupiedBySpecific, 0, relativeFloor: true, invertCondition: false))
+            {
+                placeable.AddCondition(new EdgeCondition(ConditionType.OccupiedByAny, floorNumber: 0, isFloorRelative: true, invertCondition: false));
+            }
             base.Setup(placeable);
         }
 
         protected override void HandleRotation()
         {
-            if (!Placeable.parentRelativeRotation)
+            if (!Current.parentRelativeRotation)
             {
                 base.HandleRotation();
             }
@@ -26,10 +29,10 @@ namespace CustomBuildSystem
         {
             base.UpdateVisuals(edgeNumber);
             
-            if (Placeable.parentRelativeRotation)
+            if (Current.parentRelativeRotation)
             {
                 EdgeOccupantMono placed = BuildSystem.gridCurrent.GetEdgeOccupant(edgeNumber, null);
-                if (placed != null) Rotation = placed.Rotation + Placeable.rotationOffset;
+                if (placed != null) Rotation = placed.Rotation + Current.rotationOffset;
             }
             needRemark = true;
         }

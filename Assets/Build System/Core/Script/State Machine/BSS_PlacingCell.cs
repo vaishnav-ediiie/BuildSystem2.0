@@ -5,19 +5,18 @@ using UnityEngine;
 
 namespace CustomBuildSystem
 {
-    public class BSS_PlacingCell : BSS_Placing
+    public class BSS_PlacingCell : BSS_Placing<CellPlaceable>
     {
-        public CellPlaceable Placeable { get; private set; }
+        public CellPlaceable Placeable { get; protected set; }
         public CellNumber CellNumber { get; private set; }
 
-        protected override PlaceableMonoBase PlaceableSoBase => Placeable;
         protected bool needRemark;
 
         internal virtual void Setup(CellPlaceable placeable)
         {
             this.Placeable = placeable;
             Debug.Log($"placeable: {placeable}     BuildSystem: {BuildSystem}");
-            CurrentSpawned = Object.Instantiate(placeable, BuildSystem.probesParent);
+            Current = Object.Instantiate(placeable, BuildSystem.probesParent);
             if (placeable.scaleToCellSize)
             {
                 Transform plaTran = placeable.transform;
@@ -60,20 +59,20 @@ namespace CustomBuildSystem
 
         internal void ConfirmPlacement()
         {
-            if (Placeable.isDecorator)
+            if (Current.isDecorator)
             {
                 CellOccupantMono parent = BuildSystem.gridCurrent.GetCellOccupant(CellNumber, null);
                 if (parent == null) return;
                 
                 CellDecorator placed = Place().AddComponent<CellDecorator>();
-                placed.Init(Placeable, parent, Rotation, BuildSystem.ProbsLayer);
+                placed.Init(Current, parent, Rotation, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
                 
             }
             else
             {
                 CellOccupantMono placed = Place().AddComponent<CellOccupantMono>();
-                placed.Init(Placeable, CellNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
+                placed.Init(Current, CellNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
             BuildSystem.SwitchState<BSS_Idle>();
@@ -83,7 +82,7 @@ namespace CustomBuildSystem
         internal void CancelPlacement()
         {
             CanPlace = false;
-            Object.Destroy(CurrentSpawned.gameObject);
+            Object.Destroy(Current.gameObject);
             BuildSystem.SwitchState<BSS_Idle>();
         }
 

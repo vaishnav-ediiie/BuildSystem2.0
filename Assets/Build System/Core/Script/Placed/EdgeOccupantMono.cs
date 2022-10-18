@@ -8,15 +8,15 @@ namespace CustomBuildSystem.Placed
 {
     public class EdgeOccupantMono : OccupantBaseMono
     {
-        public EdgePlaceable Scriptable { get; private set; }
+        public EdgePlaceable Placeable { get; private set; }
         public EdgeNumber Number { get; private set; }
         public int Rotation { get; private set; }
         public int Floor { get; private set; }
         [NonSerialized] public List<EdgeDecorator> Decorators;
 
-        public void Init(EdgePlaceable scriptable, EdgeNumber number, int rotation, int floorNumber, LayerMask layer)
+        public void Init(EdgePlaceable placeable, EdgeNumber number, int rotation, int floorNumber, LayerMask layer)
         {
-            this.Scriptable = scriptable;
+            this.Placeable = placeable;
             this.Number = number;
             this.Rotation = rotation;
             this.Floor = floorNumber;
@@ -24,11 +24,11 @@ namespace CustomBuildSystem.Placed
             this.gameObject.SetLayerRecursive(layer.GetLayer());
         }
 
-        public override GameObject GetDeletePrefab() => Scriptable.placingError;
+        public override GameObject GetDeletePrefab() => Placeable.placingError;
 
         public override void Occupy(BuildSystem buildSystem)
         {
-            foreach (EdgeNumber edgeNumber in Scriptable.LoopAllEdges(Number))
+            foreach (EdgeNumber edgeNumber in Placeable.LoopAllEdges(Number))
             {
                 buildSystem.gridCurrent.OccupyEdge(edgeNumber, this);
             }
@@ -36,20 +36,20 @@ namespace CustomBuildSystem.Placed
 
         public override void UnOccupy(BuildSystem buildSystem)
         {
-            foreach (EdgeNumber edgeNumber in Scriptable.LoopAllEdges(Number))
+            foreach (EdgeNumber edgeNumber in Placeable.LoopAllEdges(Number))
             {
                 buildSystem.gridCurrent.EmptyEdge(edgeNumber);
             }
         }
 
-        public override int ScriptableID => Scriptable.ID;
+        public override int PlaceableID => Placeable.ID;
         public override int FloorNumber => this.Floor;
 
-        public override bool HasDecorator(PlaceableMonoBase scriptable)
+        public override bool HasDecorator(PlaceableMonoBase placeable)
         {
             foreach (EdgeDecorator decorator in Decorators)
             {
-                if (decorator.Scriptable == scriptable) return true;
+                if (decorator.Placeable == placeable) return true;
             }
 
             return false;
@@ -82,7 +82,7 @@ namespace CustomBuildSystem.Placed
         [Serializable]
         public class Serializer
         {
-            public int scriptableID;
+            public int placeableID;
             public int row;
             public int column;
             public int edgyType;
@@ -98,7 +98,7 @@ namespace CustomBuildSystem.Placed
 
             public Serializer(EdgeOccupantMono source)
             {
-                this.scriptableID = source.Scriptable.ID;
+                this.placeableID = source.Placeable.ID;
                 this.row = source.Number.CellAfter.row;
                 this.column = source.Number.CellAfter.column;
                 this.edgyType = (int)source.Number.edgeType;
@@ -118,7 +118,7 @@ namespace CustomBuildSystem.Placed
                 EdgeNumber cellNumber = new EdgeNumber(serializer.row, serializer.column, serializer.EdgyType);
                 Vector3 position = buildSystem.gridCurrent.EdgeNumberToPosition(cellNumber);
                 Quaternion rotation = Quaternion.Euler(0, serializer.rotation, 0);
-                EdgePlaceable placeable = BuildSystem.AllPlaceableData[serializer.scriptableID] as EdgePlaceable;
+                EdgePlaceable placeable = BuildSystem.AllPlaceableData[serializer.placeableID] as EdgePlaceable;
                 
                 EdgeOccupantMono parent = Instantiate(placeable.placed, position, rotation).AddComponent<EdgeOccupantMono>();
                 parent.Init(placeable, cellNumber, serializer.rotation, serializer.floorNumber, buildSystem.ProbsLayer);
@@ -127,7 +127,7 @@ namespace CustomBuildSystem.Placed
                 foreach (DecoSer decoSer in serializer.decorators)
                 {
                     Quaternion decoRot = Quaternion.Euler(0, decoSer.rotation, 0);
-                    EdgePlaceable deco = BuildSystem.AllPlaceableData[decoSer.scriptableID] as EdgePlaceable;
+                    EdgePlaceable deco = BuildSystem.AllPlaceableData[decoSer.placeableID] as EdgePlaceable;
                     EdgeDecorator decoPlaced = Instantiate(deco.placed, position, decoRot).AddComponent<EdgeDecorator>();
                     decoPlaced.Init(deco, parent, decoSer.rotation, buildSystem.ProbsLayer);
                     decoPlaced.Occupy(buildSystem);
@@ -140,7 +140,7 @@ namespace CustomBuildSystem.Placed
         [Serializable]
         public class DecoSer
         {
-            public int scriptableID;
+            public int placeableID;
             public int rotation;
 
             public DecoSer()
@@ -149,7 +149,7 @@ namespace CustomBuildSystem.Placed
 
             public DecoSer(EdgeDecorator source)
             {
-                scriptableID = source.Scriptable.ID;
+                placeableID = source.Placeable.ID;
                 rotation = source.Rotation;
             }
         }

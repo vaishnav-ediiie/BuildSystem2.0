@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CustomBuildSystem.Placed;
+using CustomBuildSystem.Placing;
 using UnityEngine;
 
 
@@ -40,9 +41,9 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current CellNumber = <c>placeable.CellNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
+        /// <para>PlaceableObject being placed = <c>placeable.Placeable</c></para>
         /// <para>if you want to check base conditions (set in inspector) call</para>
-        /// <c> placeable.Scriptable.AreBaseConditionSatisfied(placeable)</c>
+        /// <c> placeable.Placeable.AreBaseConditionSatisfied(placeable)</c>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>+1 to rotate object by 90 degrees, -1 to rotate object by -90 degrees, 0 to not rotate</returns>
@@ -57,23 +58,23 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current CellNumber = <c>placeable.CellNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
+        /// <para>PlaceableObject being placed = <c>placeable.Current</c></para>
         /// <para>if you want to check base conditions (set in inspector) call
-        /// <c> placeable.Scriptable.AreBaseConditionSatisfied(placeable)</c>
+        /// <cre> placeable.Current.AreBaseConditionSatisfied(placeable)</c>
         /// </para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>Return true to mark Okay, false to mark Error</returns>
         public virtual bool ValidateCellPlacement(BSS_PlacingCell placeable)
         {
-            if (placeable.Placeable.isDecorator)
+            if (placeable.Current.isDecorator)
             {
                 CellOccupantMono parent = placeable.BuildSystem.gridCurrent.GetCellOccupant(placeable.CellNumber, null);
                 if (parent != null)
-                    return placeable.Placeable.AreBaseConditionsSatisfied(placeable) && !parent.HasDecorator(placeable.Placeable);
+                    return placeable.Current.AreBaseConditionsSatisfied(placeable) && !parent.HasDecorator(placeable.Current);
             }
 
-            return placeable.Placeable.AreBaseConditionsSatisfied(placeable);
+            return placeable.Current.AreBaseConditionsSatisfied(placeable);
         }
 
         /// <summary>
@@ -82,11 +83,11 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current CellNumber = <c>placeable.CellNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
+        /// <para>PlaceableObject being placed = <c>placeable.Placeable</c></para>
         /// <para>if you want to check base conditions (set in inspector) call</para>
-        /// <c> placeable.Scriptable.AreBaseConditionSatisfied(placeable)</c>
+        /// <c> placeable.Placeable.AreBaseConditionSatisfied(placeable)</c>
         /// </remarks>
-        /// <param name="placeable">Scriptable that we are placing</param>
+        /// <param name="placeable">Placeable that we are placing</param>
         /// <returns>true when you want to confirm placement, false otherwise</returns>
         public virtual bool ShouldPlaceCell(BSS_PlacingCell placeable)
         {
@@ -99,7 +100,7 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current EdgeNumber = <c>placeable.EdgeNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
+        /// <para>PlaceableObject being placed = <c>placeable.Placeable</c></para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>true when you want to rotate object by 180 degrees, false otherwise</returns>
@@ -115,7 +116,7 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current EdgeNumber = <c>placeable.EdgeNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
+        /// <para>PlaceableObject being placed = <c>placeable.Current</c></para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>true when you want to confirm placement, false otherwise</returns>
@@ -130,23 +131,23 @@ namespace CustomBuildSystem
         /// <remarks>
         /// <para>current rotation = <c>placeable.Rotation</c></para>
         /// <para>current EdgeNumber = <c>placeable.EdgeNumber</c></para>
-        /// <para>ScriptableObject being placed = <c>placeable.Scriptable</c></para>
+        /// <para>PlaceableObject being placed = <c>placeable.Placeable</c></para>
         /// <para>if you want to check base conditions (set in inspector) call
-        /// <c> placeable.Scriptable.AreBaseConditionSatisfied(placeable)</c>
+        /// <c> placeable.Current.AreBaseConditionSatisfied(placeable)</c>
         /// </para>
         /// </remarks>
         /// <param name="placeable">Object that we are placing</param>
         /// <returns>Return true if you want to show placing Okay, false if you want to show placing Error</returns>
         public virtual bool ValidateEdgePlacement(BSS_PlacingEdge placeable)
         {
-            if (placeable.Placeable.isDecorator)
+            if (placeable.Current.isDecorator)
             {
                 EdgeOccupantMono parent = placeable.BuildSystem.gridCurrent.GetEdgeOccupant(placeable.EdgeNumber, null);
                 if (parent != null)
-                    return placeable.Placeable.AreBaseConditionsSatisfied(placeable) && !parent.HasDecorator(placeable.Placeable);
+                    return placeable.Current.AreBaseConditionsSatisfied(placeable) && !parent.HasDecorator(placeable.Current);
             }
 
-            return placeable.Placeable.AreBaseConditionsSatisfied(placeable);
+            return placeable.Current.AreBaseConditionsSatisfied(placeable);
         }
 
         /// <summary> Called every frame. </summary>

@@ -11,6 +11,9 @@ namespace CustomBuildSystem
         [SerializeField] private bool displayCellNumbers;
         [SerializeField] private bool scaleVisualsByCellSize;
         private BuildSystem buildSystem;
+        
+        
+        
 
         internal void Setup(CellVisuals cellObject, EdgeVisuals edgeObject, bool displayCellNumbers, bool scaleVisualsByCellSize)
         {
@@ -49,8 +52,11 @@ namespace CustomBuildSystem
                 else cellVisuals.Init(cellNumber, displayCellNumbers);
                 if (displayEdges)
                 {
-                    Instantiate(edgeObject, simpleGrid.EdgeNumberToPosition(new EdgeNumber(cellNumber, EdgeType.Horizontal)), Quaternion.identity, transform).Init($"{cellNumber} Horizontal", true, displayCellNumbers);
-                    Instantiate(edgeObject, simpleGrid.EdgeNumberToPosition(new EdgeNumber(cellNumber, EdgeType.Vertical)), Quaternion.identity, transform).Init($"{cellNumber} Vertical", false, displayCellNumbers);
+                    EdgeNumber edgeHor = new EdgeNumber(cellNumber, EdgeType.Horizontal);
+                    Instantiate(edgeObject, simpleGrid.EdgeNumberToPosition(edgeHor), Quaternion.identity, transform).Init(edgeHor, false, displayCellNumbers);
+                    
+                    EdgeNumber edgeVer = new EdgeNumber(cellNumber, EdgeType.Vertical);
+                    Instantiate(edgeObject, simpleGrid.EdgeNumberToPosition(edgeVer), Quaternion.identity, transform).Init(edgeVer, true, displayCellNumbers);
                 }
             }
 

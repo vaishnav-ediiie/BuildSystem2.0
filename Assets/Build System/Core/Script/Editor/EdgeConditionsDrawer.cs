@@ -1,54 +1,62 @@
 using System.Collections.Generic;
 using CustomBuildSystem;
+using CustomBuildSystem.Placing.Conditional;
 using UnityEditor;
+using UnityEditor.Graphs;
 using UnityEngine;
 
 
 [CustomPropertyDrawer(typeof(EdgeCondition))]
 public class EdgeConditionsDrawer : PropertyDrawer
 {
-    protected static Dictionary<int, Color> ConditionalColors = new Dictionary<int, Color>()
-    {
-        { 0, new Color(0.8f, 0.8f, 0.8f) }, // ConditionType.DontCare
-        { 1, new Color(0.5f, 1f, 0.5f) }, // ConditionType.MustBeEmpty
-        { 2, new Color(1f, 0.5f, 0.5f) }, // ConditionType.OccupiedByAny
-        { 3, new Color(1f, 0.5f, 1f) } // ConditionType.OccupiedBySpecific
-    };
-
     SerializedProperty conditionType;
     SerializedProperty occupant;
-
+    SerializedProperty invertCondition;
+    SerializedProperty floorNumber;
+    SerializedProperty isFloorRelative;
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        if (conditionType == null) conditionType = property.FindPropertyRelative("conditionType");
-        if (occupant == null) occupant = property.FindPropertyRelative("occupant");
-
-        return EditorGUIUtility.singleLineHeight;
+        conditionType = property.FindPropertyRelative("type");
+        occupant = property.FindPropertyRelative("occupants");
+        if (conditionType.enumValueIndex >= 2) return EditorGUIUtility.singleLineHeight * 2f + EditorGUI.GetPropertyHeight(occupant);
+        return EditorGUIUtility.singleLineHeight * 2f;
     }
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        Rect rect = new Rect(position.x, position.y, EditorGUIUtility.labelWidth, position.height);
-        Color def = GUI.color;
-        GUI.color = ConditionalColors[conditionType.enumValueIndex];
-        GUI.Label(rect, label);
-        GUI.color = def;
-        rect.x += rect.width;
-        rect.width = position.width - EditorGUIUtility.labelWidth;
+        EditorGUI.BeginProperty(position, label, property);
+        invertCondition = property.FindPropertyRelative("invertCondition");
+        conditionType = property.FindPropertyRelative("type");
+        floorNumber = property.FindPropertyRelative("floorNumber");
+        isFloorRelative = property.FindPropertyRelative("isFloorRelative");
 
-        if (conditionType.enumValueIndex == 3)
+
+        Rect rect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+        invertCondition.boolValue = EditorGUI.ToggleLeft(rect, "Invert Condition", invertCondition.boolValue);
+
+        rect.y += EditorGUIUtility.singleLineHeight;
+        float width = (rect.width * 0.5f) - 100f;
+        rect.width = width;
+        EditorGUI.PropertyField(rect, conditionType, GUIContent.none);
+        rect.x += rect.width + 8;
+        rect.width = 60f;
+        EditorGUI.LabelField(rect, "On Floor");
+        rect.x += 50f;
+        rect.width = width - 8;
+        EditorGUI.PropertyField(rect, floorNumber, GUIContent.none);
+        rect.x += rect.width + 3;
+        rect.width = 150;
+        isFloorRelative.boolValue = EditorGUI.ToggleLeft(rect, "Relative To Player", isFloorRelative.boolValue);
+        
+        if (conditionType.enumValueIndex >= 2)
         {
-            rect.width *= 0.5f;
-            EditorGUI.PropertyField(rect, conditionType, GUIContent.none);
-            rect.x += rect.width;
-            if (occupant.objectReferenceValue == null) GUI.color = Color.red;
-            EditorGUI.PropertyField(rect, occupant, GUIContent.none);
-            GUI.color = def;
+            occupant = property.FindPropertyRelative("occupants");
+            rect.width = position.width;
+            rect.x = position.x;
+            rect.y += EditorGUIUtility.singleLineHeight;
+            EditorGUI.PropertyField(rect, occupant, new GUIContent("Occupants"), true);
         }
-        else
-        {
-            EditorGUI.PropertyField(rect, conditionType, GUIContent.none);
-        }
+        EditorGUI.EndProperty();
     }
 }

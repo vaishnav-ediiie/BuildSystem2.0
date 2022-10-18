@@ -5,18 +5,17 @@ using UnityEngine;
 
 namespace CustomBuildSystem
 {
-    public class BSS_PlacingEdge : BSS_Placing
+    public class BSS_PlacingEdge : BSS_Placing<EdgePlaceable>
     {
-        public EdgePlaceable Placeable { get; private set; }
+        public EdgePlaceable Placeable { get; protected set; }
         public EdgeNumber EdgeNumber { get; private set; }
-        protected override PlaceableMonoBase PlaceableSoBase => Placeable;
 
         protected bool needRemark;
         
         internal virtual void Setup(EdgePlaceable placeable)
         {
             this.Placeable = placeable;
-            CurrentSpawned = Object.Instantiate(placeable, BuildSystem.probesParent);
+            Current = Object.Instantiate(placeable, BuildSystem.probesParent);
             Rotation = 0;
 
             EdgeNumber = GetReferenceEdge();
@@ -26,7 +25,7 @@ namespace CustomBuildSystem
 
         protected virtual void UpdateVisuals(EdgeNumber edgeNumber)
         {
-            float rotation = (edgeNumber.edgeType == EdgeType.Horizontal) ? -90f : 0f;
+            float rotation = (edgeNumber.edgeType == EdgeType.Vertical) ? -90f : 0f;
             MoveTo(GridCurrent.EdgeNumberToPosition(edgeNumber), edgeNumber);
             RotateTo(0, rotation, 0);
             EdgeNumber = edgeNumber;
@@ -61,19 +60,19 @@ namespace CustomBuildSystem
 
         internal void ConfirmPlacement()
         {
-            if (Placeable.isDecorator)
+            if (Current.isDecorator)
             {
                 EdgeOccupantMono parent = BuildSystem.gridCurrent.GetEdgeOccupant(EdgeNumber, null);
                 if (parent == null) return;
                 
                 EdgeDecorator placed = Place().AddComponent<EdgeDecorator>();
-                placed.Init(Placeable, parent, Rotation, BuildSystem.ProbsLayer);
+                placed.Init(Current, parent, Rotation, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
             else
             {
                 EdgeOccupantMono placed = Place().AddComponent<EdgeOccupantMono>();
-                placed.Init(Placeable, EdgeNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
+                placed.Init(Current, EdgeNumber, Rotation, BuildSystem.CurrentFloor, BuildSystem.ProbsLayer);
                 placed.Occupy(BuildSystem);
             }
 
@@ -83,9 +82,9 @@ namespace CustomBuildSystem
 
         internal void CancelPlacement()
         {
-            Debug.Log($"Cancel Build: {CurrentSpawned}");
+            Debug.Log($"Cancel Build: {Current}");
             CanPlace = false;
-            Object.Destroy(CurrentSpawned.gameObject);
+            Object.Destroy(Current.gameObject);
             BuildSystem.SwitchState<BSS_Idle>();
         }
         

@@ -7,19 +7,19 @@ namespace CustomGridSystem
     {
         [SerializeField] private TextMeshPro textMesh;
 
-        public void Init(string text, bool isHorz, bool displayText)
+        public void Init(string theName, bool isVert, bool displayText)
         {
-            this.name = text;
+            this.name = theName.ToString();
             if (displayText)
             {
-                textMesh.text = text;
+                textMesh.text = theName;
             }
             else
             {
                 textMesh.enabled = false;
             }
 
-            if (isHorz)
+            if (isVert)
             {
                 transform.Rotate(0f, 90f, 0f);
             }

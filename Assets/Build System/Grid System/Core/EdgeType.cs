@@ -2,7 +2,7 @@
 {
     public enum EdgeType
     {
-        Vertical,
-        Horizontal
+        Horizontal,
+        Vertical
     }
 }

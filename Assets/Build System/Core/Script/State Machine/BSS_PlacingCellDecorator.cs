@@ -1,5 +1,6 @@
 ﻿using CustomBuildSystem.Placed;
 using CustomBuildSystem.Placing;
+using CustomBuildSystem.Placing.Conditional;
 using CustomGridSystem;
 
 namespace CustomBuildSystem
@@ -8,27 +9,29 @@ namespace CustomBuildSystem
     {
         internal override void Setup(CellPlaceable placeable)
         {
-            ConditionType current = placeable.placementCriteria.cellCenter.conditionType;
-            if (current != ConditionType.OccupiedByAny && current != ConditionType.OccupiedBySpecific) 
-                placeable.placementCriteria.cellCenter.conditionType = ConditionType.OccupiedByAny;
+            if (   !placeable.HasCondition(ConditionType.OccupiedByAny, CellConditionPlace.Centers,         0, relativeFloor: true, invertCondition: false)
+                   && !placeable.HasCondition(ConditionType.OccupiedBySpecific, CellConditionPlace.Centers, 0, relativeFloor: true, invertCondition: false))
+            {
+                placeable.AddCondition(new CellCondition(ConditionType.OccupiedByAny, CellConditionPlace.Centers, floorNumber: 0, isFloorRelative: true, invertCondition: false));
+            }
             base.Setup(placeable);
         }
 
         protected override void HandleRotation()
         {
-            if (!Placeable.parentRelativeRotation) 
+            if (!Current.parentRelativeRotation) 
                 base.HandleRotation();
         }
 
         protected override void UpdateVisuals(CellNumber cellNumber)
         {
             base.UpdateVisuals(cellNumber);
-            if (Placeable.parentRelativeRotation)
+            if (Current.parentRelativeRotation)
             {
                 CellOccupantMono placed = BuildSystem.gridCurrent.GetCellOccupant(cellNumber, null);
                 if (placed != null)
                 {
-                    Rotation = placed.Rotation + Placeable.rotationOffset;
+                    Rotation = placed.Rotation + Current.rotationOffset;
                 }
             }
 
