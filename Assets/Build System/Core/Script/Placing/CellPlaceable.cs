@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using CustomBuildSystem.Placing.Conditional;
-using DebugToScreen;
 using UnityEngine;
 using CellNumber = CustomGridSystem.CellNumber;
 
@@ -11,7 +9,9 @@ namespace CustomBuildSystem.Placing
     {
         [SerializeField] private CellNumber cellNeeded = CellNumber.One;
         [SerializeField] private CellNumber centerCell = CellNumber.Zero;
+        [SerializeField] private CombineMode criteriaCombineMode;
         [SerializeField] private List<CellCondition> placementCriteria;
+        
         public CellLayoutInfo LayoutInfo { get; private set; }
 
         public void Awake()
@@ -22,16 +22,22 @@ namespace CustomBuildSystem.Placing
         public bool AreBaseConditionsSatisfied(BSS_PlacingCell placingCell)
         {
             LayoutInfo.Refresh(placingCell.CellNumber, placingCell.Rotation);
-            GameDebug.ClearInfo();
+            if (criteriaCombineMode == CombineMode.And)
+            {
+                foreach (CellCondition condition in placementCriteria)
+                {
+                    if (condition.HasViolated(placingCell.BuildSystem, LayoutInfo))
+                        return false;
+                }
+                return true;
+            }
+            
             foreach (CellCondition condition in placementCriteria)
             {
-                if (condition.HasViolated(placingCell.BuildSystem, LayoutInfo))
-                {
-                    return false;
-                }
+                if (!condition.HasViolated(placingCell.BuildSystem, LayoutInfo))
+                    return true;
             }
-
-            return true;
+            return false;
         }
 
         public bool HasCondition(ConditionType type, CellConditionPlace place, int floorNumber, bool relativeFloor, bool invertCondition)
@@ -64,5 +70,7 @@ namespace CustomBuildSystem.Placing
                 new CellCondition(ConditionType.MustBeEmpty, CellConditionPlace.Centers, floorNumber: 0, isFloorRelative: true, invertCondition: false)
             };
         }
+        
     }
+    
 }

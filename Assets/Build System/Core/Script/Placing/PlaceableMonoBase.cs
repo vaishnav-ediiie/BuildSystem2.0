@@ -15,6 +15,13 @@ namespace CustomBuildSystem.Placing
         [SerializeField] internal bool isDecorator = false;
         [SerializeField, DrawIfBool("isDecorator", true)] internal bool parentRelativeRotation = false;
         [SerializeField, DrawIfBool("isDecorator", true)] internal int rotationOffset = 0;
+        
+        
+        public enum CombineMode
+        {
+            And,
+            Or
+        }
     }
 
 }

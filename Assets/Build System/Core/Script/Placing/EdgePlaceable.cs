@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using CustomBuildSystem.Placing.Conditional;
 using CustomGridSystem;
-using DebugToScreen;
 using UnityEngine;
 
 namespace CustomBuildSystem.Placing
@@ -11,6 +10,7 @@ namespace CustomBuildSystem.Placing
     {
         public int cellsCount = 1;
         public int centerCellIndex = 0;
+        [SerializeField] private CombineMode criteriaCombineMode;
         [SerializeField] private List<EdgeCondition> placementCriteria;
 
         public IEnumerable<EdgeNumber> LoopAllEdges(EdgeNumber globalCordOfCenterEdge)
@@ -48,27 +48,31 @@ namespace CustomBuildSystem.Placing
         
         public bool AreBaseConditionsSatisfied(BSS_PlacingEdge placingEdge)
         {
-            GameDebug.ClearInfo();
-            GameDebug.AppendLine("AreBaseConditionsSatisfied: ");
             BuildSystem buildSystem = placingEdge.BuildSystem; 
             EdgeNumber current = placingEdge.EdgeNumber;
+
+            if (criteriaCombineMode == CombineMode.And)
+            {
+                foreach (EdgeCondition condition in placementCriteria)
+                {
+                    foreach (EdgeNumber edge in this.LoopAllEdges(current))
+                    {
+                        if (condition.HasViolated(buildSystem, edge)) return false;
+                    }
+                }
+                return true;
+            }
+            
             
             foreach (EdgeCondition condition in placementCriteria)
             {
-                GameDebug.AppendLine($"    {condition.type}: ");
                 foreach (EdgeNumber edge in this.LoopAllEdges(current))
                 {
-                    GameDebug.AppendLine($"        {current}, ");
-                    if (condition.HasViolated(buildSystem, edge))
-                    {
-                        GameDebug.AppendText("- Violated");
-                        return false;
-                    }
+                    if (! condition.HasViolated(buildSystem, edge)) return true;
                 }
-                GameDebug.AppendText("- Okay");
             }
-            GameDebug.AppendLine("All Okay");
-            return true;
+            return false;
+            
         }
 
         public void AddCondition(EdgeCondition condition)

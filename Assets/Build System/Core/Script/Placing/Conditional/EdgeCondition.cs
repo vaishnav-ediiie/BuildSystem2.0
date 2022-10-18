@@ -13,12 +13,7 @@ namespace CustomBuildSystem.Placing.Conditional
     {
         public ConditionType type;
         public PlaceableMonoBase[] occupants;
-        public bool invertCondition;
-        
-
-        
         private HashSet<int> occupantsIds;
-
 
         /// <summary>Checks if the condition is violated on the given edges</summary>
         /// <returns>true is the condition is not met</returns>
@@ -51,7 +46,6 @@ namespace CustomBuildSystem.Placing.Conditional
             Init();
         }
 
-
         private void Init()
         {
             switch (type)
@@ -60,7 +54,7 @@ namespace CustomBuildSystem.Placing.Conditional
                 {
                     HasViolated = (buildSystem, edge) =>
                     {
-                        if (GetGrid(buildSystem, out var grid)) return true;
+                        if (GetGrid(buildSystem, out var grid)) return !outputWhenFloorDontExist;
                         return !grid.IsEdgeNumberValid(edge) || grid.IsEdgeOccupied(edge);
                     };
                     break;
@@ -69,7 +63,7 @@ namespace CustomBuildSystem.Placing.Conditional
                 {
                     HasViolated = (buildSystem, edge) =>
                     {
-                        if (GetGrid(buildSystem, out var grid)) return true;
+                        if (GetGrid(buildSystem, out var grid)) return !outputWhenFloorDontExist;
                         return !grid.IsEdgeNumberValid(edge) || !grid.IsEdgeOccupied(edge);
                     };
 
@@ -79,7 +73,7 @@ namespace CustomBuildSystem.Placing.Conditional
                 {
                     HasViolated = (buildSystem, edge) =>
                     {
-                        if (GetGrid(buildSystem, out var grid)) return true;
+                        if (GetGrid(buildSystem, out var grid)) return !outputWhenFloorDontExist;
                         EdgeOccupantMono occupantMono = grid.GetEdgeOccupant(edge, null);
                         return !grid.IsEdgeNumberValid(edge) || (occupantMono == null) || !occupantsIds.Contains(occupantMono.Placeable.ID);
                     };
@@ -89,7 +83,7 @@ namespace CustomBuildSystem.Placing.Conditional
                 {
                     HasViolated = (buildSystem, edge) =>
                     {
-                        if (GetGrid(buildSystem, out var grid)) return true;
+                        if (GetGrid(buildSystem, out var grid)) return !outputWhenFloorDontExist;
                         EdgeOccupantMono occupantMono = grid.GetEdgeOccupant(edge, null);
                         return !grid.IsEdgeNumberValid(edge) || !(occupantMono == null || !occupantsIds.Contains(occupantMono.Placeable.ID));
                     };
